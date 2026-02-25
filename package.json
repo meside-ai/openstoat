@@ -1,0 +1,18 @@
+{
+  "name": "openstoat",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "bun run --filter '*' build",
+    "test": "bun test",
+    "test:integration": "bun test packages/openstoat-cli/test/integration.test.ts",
+    "link:global": "bun run build && cd packages/openstoat-cli && npm link"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.0.0"
+  }
+}
