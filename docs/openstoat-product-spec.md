@@ -13,7 +13,7 @@
 - 目标用户: 1 人类 + 10 AI Agents
 - 架构: Local-first + CLI-first
 - **无 LLM**: 不配置 API Key，不请求 LLM
-- **CLI 即文档**: `stoat help` 就是超级说明书
+- **CLI 即文档**: `openstoat --help` 就是超级说明书
 
 **核心价值**:
 - 人类是瓶颈，AI 并行填满所有空闲时间
@@ -100,22 +100,23 @@ OpenStoat 可选启动一个守护进程，用于自动调度 AI 任务。
 
 ```bash
 # 配置执行任务的 Agent
-$ stoat config set agent "openclaw"        # 或 claude-code, cursor 等
-$ stoat config set agent-command "openclaw do-task"
+$ openstoat config set agent "openclaw"        # 或 claude-code, cursor 等
+$ openstoat config set poll-interval 60       # 轮询间隔 (秒)，默认 60
 ```
 
 ### 4.3 逻辑
 
 ```bash
-$ stoat daemon start
+$ openstoat daemon start
 
-# 内部逻辑 (每分钟执行):
+# 内部逻辑 (按 poll-interval 轮询):
 while true:
-  tasks = stoat list --status ai_ready --json
+  tasks = openstoat task ls --status ai_ready --json
   for task in tasks:
-    run: $agent_command --task-id task.id
-    stoat update task.id --status in_progress
-  sleep 60
+    agent = config.get("agent")
+    exec(f"{agent} do-task --task-id {task.id}")
+    openstoat task update {task.id} --status in_progress
+  sleep(poll_interval)
 ```
 
 ### 4.4 流程
@@ -127,19 +128,19 @@ Daemon 轮询 → 发现新任务
               ↓
 触发 Agent 执行 → Agent 完成
               ↓
-stoat complete → 下游任务 ai_ready
+openstoat task done <id> → 下游任务 ai_ready
               ↓
 Daemon 继续调度
 ```
 
 ---
 
-## 10. 动态人工介入
+## 5. 动态人工介入
 
 Agent 执行过程中发现需要人工介入时，可直接升级为 Human 任务：
 
 ```bash
-$ stoat need-human task_001 --reason "发现 API 签名方式与文档不符，需要确认"
+$ openstoat task need-human task_001 --reason "发现 API 签名方式与文档不符，需要确认"
 ```
 
 状态流转：
@@ -153,23 +154,22 @@ in_progress → waiting_human → human_done → in_progress
 
 ---
 
-## 10. 数据模型
+## 6. 数据模型
 
-### 9.1 Plan
+### 6.1 Plan
 
 ```json
 {
   "id": "plan_001",
   "title": "集成 Paddle 支付",
   "description": "在项目中集成 Paddle 作为支付 provider",
-  "created_by": "human",
+  "status": "planned | in_progress | completed",
   "created_at": "2026-02-25T16:00:00Z",
-  "tasks": ["task_001", "task_002", "task_003", "task_004"],
-  "status": "planned | in_progress | completed"
+  "updated_at": "2026-02-25T16:00:00Z"
 }
 ```
 
-### 9.2 Task
+### 6.2 Task
 
 ```json
 {
@@ -180,22 +180,13 @@ in_progress → waiting_human → human_done → in_progress
   "owner": "ai",
   "status": "pending | ai_ready | in_progress | waiting_human | human_done | done",
   "depends_on": [],
-  "required_input": null,
   "output": null,
   "created_at": "2026-02-25T16:00:00Z",
-  "started_at": null,
-  "completed_at": null,
-  "history": [
-    {
-      "action": "created",
-      "at": "2026-02-25T16:00:00Z",
-      "by": "system"
-    }
-  ]
+  "updated_at": "2026-02-25T16:00:00Z"
 }
 ```
 
-### 9.3 Template (组织流程模板)
+### 6.3 Template (组织流程模板)
 
 ```json
 {
@@ -238,7 +229,7 @@ in_progress → waiting_human → human_done → in_progress
 }
 ```
 
-### 9.4 Handoff (交接记录)
+### 6.4 Handoff (交接记录)
 
 ```json
 {
@@ -259,9 +250,9 @@ in_progress → waiting_human → human_done → in_progress
 
 ---
 
-## 10. 核心流程
+## 7. 核心流程
 
-### 9.1 Plan 提交与 Task 拆分
+### 7.1 Plan 提交与 Task 拆分
 
 ```
 1. Human 提交 Plan (文本格式)
@@ -281,7 +272,7 @@ in_progress → waiting_human → human_done → in_progress
 5. AI 任务直接进入 ai_ready，Human 任务进入 pending
 ```
 
-### 9.2 执行流程
+### 7.2 执行流程
 
 ```
 Task 状态机:
@@ -295,7 +286,7 @@ Task 状态机:
 - Human 任务完成 → 触发下游 AI 任务 (带 handoff)
 ```
 
-### 9.3 依赖触发示例
+### 7.3 依赖触发示例
 
 ```
 Task A (AI) ──依赖──→ Task B (Human) ──依赖──→ Task C (AI)
@@ -306,7 +297,7 @@ Task A (AI) ──依赖──→ Task B (Human) ──依赖──→ Task C (A
 
 ---
 
-## 10. 团队模型
+## 8. 团队模型
 
 **实际结构**: 1 人类 + N 个 AI Agents
 
@@ -333,7 +324,7 @@ Day 1, 11:00
 
 ---
 
-## 10. 存储与项目
+## 9. 存储与项目
 
 ### 9.1 存储位置
 
@@ -351,27 +342,46 @@ Day 1, 11:00
 
 ```bash
 # 初始化项目
-$ stoat init my-project
+$ openstoat init --project my-project
 
 # 提交计划
-$ stoat plan "集成 Paddle 支付
+$ openstoat plan add "集成 Paddle 支付
 1. 添加枚举
 2. 提供 API Key
 3. 实现服务"
 
 # 查看任务
-$ stoat list
+$ openstoat task ls
 
 # 人类完成某任务
-$ stoat complete task_002 --input "api_key=xxx"
+$ openstoat task done task_002
 
-# 查看状态
-$ stoat status
+# 查看计划/任务状态
+$ openstoat plan status <plan_id>
+$ openstoat task ls --status waiting_human
 ```
 
 ---
 
-## 10. 实现阶段
+## 10. 审核不通过流程
+
+代码审核发现问题时，可打回修改：
+
+```
+Task E (审核): Human 标记 "需要修改"
+        │
+        ▼
+系统创建 Task E-1: 修复审核问题 (AI)，依赖 Task E
+        │
+        ▼
+AI 修复 → openstoat task done E-1 → 重新进入 Task E 等待审核
+```
+
+只需新增一个修复任务，不引入新状态，保持状态机简洁。
+
+---
+
+## 11. 实现阶段
 
 ### Phase 1: MVP
 

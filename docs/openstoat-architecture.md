@@ -72,7 +72,7 @@ openstoat/
 │                                                                 │
 │   $ openstoat --help                                           │
 │   $ openstoat plan add "..."                                   │
-│   $ openstoat task list                                        │
+│   $ openstoat task ls                                          │
 │   $ openstoat daemon start                                     │
 │   $ openstoat config set agent openclaw                        │
 └──────────────────────┬──────────────────────────────────────────┘
@@ -80,7 +80,7 @@ openstoat/
        ┌───────────────┼───────────────┐
        ▼               ▼               ▼
 ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-│  plan add   │ │  task list  │ │  daemon     │
+│  plan add   │ │  task ls    │ │  daemon     │
 │  plan ls    │ │  task show  │ │  daemon     │
 │  plan rm    │ │  task done  │ │  start      │
 │             │ │  need-human │ │  stop       │
@@ -144,7 +144,8 @@ $ openstoat task ls                       # 列出所有任务
 $ openstoat task ls --status ai_ready     # 按状态筛选
 $ openstoat task ls --owner human         # 按负责人筛选
 $ openstoat task show <task_id>           # 任务详情
-$ openstoat task done <task_id>           # 标记完成 (Human)
+$ openstoat task done <task_id>           # 标记完成 (Human/AI)
+$ openstoat task update <task_id> --status <status>  # 更新状态 (Daemon 等)
 $ openstoat task need-human <task_id> --reason "原因"  # AI 升级为 Human
 $ openstoat task depend <task_id> --on <dep_task_id>  # 添加依赖
 ```
@@ -201,7 +202,7 @@ $ openstoat handoff show <handoff_id>     # 查看交接详情
 │    │                         │                         │    │
 │    ▼                         ▼                         ▼    │
 │ openstoat             openstoat              openstoat       │
-│ plan add              task list              daemon start    │
+│ plan add              task ls                daemon start    │
 └─────────────────────────┬─────────────────────────┬──────────┘
                           │                         │
                           ▼                         ▼
@@ -239,7 +240,7 @@ $ openstoat handoff show <handoff_id>     # 查看交接详情
 │   │     for task in tasks:                             │  │
 │   │       agent = config.get("agent")                  │  │
 │   │       exec(f"{agent} do-task --task-id {task.id}") │  │
-│   │       exec("openstoat task update --status in_progress")     │
+│   │       exec("openstoat task update {task.id} --status in_progress") │
 │   │     sleep(poll_interval)                           │  │
 │   └─────────────────────────────────────────────────────┘  │
 │                                                             │
@@ -260,6 +261,14 @@ pending → ai_ready → in_progress → waiting_human → human_done → done
 特殊操作:
 - AI 需要人工: in_progress → waiting_human (via need-human)
 - Human 完成: waiting_human → human_done → in_progress (下游任务)
+- 审核不通过: 创建修复任务 (AI)，完成后重新进入原审核任务
+
+审核不通过流程:
+  Task E (审核) → Human 标记 "需要修改"
+       ↓
+  创建 Task E-1 (修复, AI) → AI 完成 → openstoat task done E-1
+       ↓
+  Task E 重新进入 waiting_human 等待审核
 ```
 
 ---

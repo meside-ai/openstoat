@@ -10,7 +10,7 @@
 - **无需账号/API Key**
 - **支持多项目**，每个项目独立模板
 - **无 LLM**: OpenStoat 不配置 LLM，规划由外部 Agent 完成
-- **CLI 即文档**: `stoat help` 是完整说明书
+- **CLI 即文档**: `openstoat --help` 是完整说明书
 
 ---
 
@@ -171,13 +171,13 @@ Task F (部署)   ⏸ waiting_human ← 你部署
 ### 流程
 
 ```
-Task E (审核): 你点了 "需要修改"
+Task E (审核): Human 标记 "需要修改"
         │
         ▼
 系统创建 Task E-1: 修复审核问题 (AI)
         │
         ▼
-AI 修复 → 重新进入 Task E 等待审核
+AI 修复 → openstoat task done E-1 → 重新进入 Task E 等待审核
 ```
 
 ---
@@ -221,13 +221,18 @@ Task C 依赖 Task B (你提供的 API Key)，AI 做 Task C 时需要知道 Key 
 
 ```json
 {
-  "from_task": "Task B (提供 API Key)",
-  "to_task": "Task C (实现支付服务)",
-  "output": {
-    "api_key": "pdl_xxx_xxx",
-    "environment": "sandbox"
-  },
-  "notes": "使用 sandbox 环境"
+  "id": "handoff_001",
+  "from_task_id": "task_002",
+  "to_task_id": "task_003",
+  "summary": "Task B 已提供 API Key，使用 sandbox 环境",
+  "artifacts": [
+    {
+      "type": "credentials",
+      "api_key": "pdl_xxx_xxx",
+      "environment": "sandbox"
+    }
+  ],
+  "created_at": "2026-02-25T16:30:00Z"
 }
 ```
 
