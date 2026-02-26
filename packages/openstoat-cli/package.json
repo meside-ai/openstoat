@@ -1,5 +1,5 @@
 {
-  "name": "openstoat-cli",
+  "name": "openstoat",
   "version": "0.1.0",
   "bin": {
     "openstoat": "./bin/openstoat"

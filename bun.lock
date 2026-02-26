@@ -10,7 +10,7 @@
       },
     },
     "packages/openstoat-cli": {
-      "name": "openstoat-cli",
+      "name": "openstoat",
       "version": "0.1.0",
       "bin": {
         "openstoat": "./bin/openstoat",
@@ -106,7 +106,7 @@
 
     "is-fullwidth-code-point": ["is-fullwidth-code-point@3.0.0", "", {}, "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg=="],
 
-    "openstoat-cli": ["openstoat-cli@workspace:packages/openstoat-cli"],
+    "openstoat": ["openstoat@workspace:packages/openstoat-cli"],
 
     "openstoat-core": ["openstoat-core@workspace:packages/openstoat-core"],
 

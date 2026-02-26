@@ -1,4 +1,6 @@
 # Publish openstoat CLI to npm on git tag push
+# Uses npm Trusted Publishing (OIDC) - no NPM_TOKEN secret needed
+# https://docs.npmjs.com/trusted-publishers
 name: Publish to npm
 
 on:
@@ -11,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      id-token: write
+      id-token: write  # Required for OIDC trusted publishing
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,7 +21,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'  # Trusted publishing requires Node 22.14+
           registry-url: 'https://registry.npmjs.org'
 
       - name: Setup Bun
@@ -34,8 +36,7 @@ jobs:
       - name: Publish packages to npm
         run: |
           # Publish in dependency order (types -> core -> daemon -> skills -> cli)
+          # Uses OIDC - npm CLI auto-detects GitHub Actions and authenticates
           for pkg in openstoat-types openstoat-core openstoat-daemon openstoat-skills openstoat-cli; do
-            (cd packages/$pkg && npm publish --provenance --access public)
+            (cd packages/$pkg && npm publish --access public)
           done
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
