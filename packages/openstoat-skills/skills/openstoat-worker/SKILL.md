@@ -1,6 +1,7 @@
 ---
 name: openstoat-worker
-description: Claims and executes tasks in OpenStoat via CLI. Use when acting as Agent Worker, executing tasks from OpenStoat Kanban, claiming tasks, completing tasks with handoff, or when blocked and needing to self-unblock.
+description: Claims and executes tasks in OpenStoat via CLI. Runs openstoat task claim, start, done, and self-unblock. Use when acting as Agent Worker, when the user mentions execute task, claim task, complete task, handoff, self-unblock, blocked, openstoat worker, or task execution.
+metadata: {"openclaw":{"requires":{"bins":["openstoat"]},"emoji":"🔧"}}
 ---
 
 # OpenStoat Worker

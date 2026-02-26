@@ -14,16 +14,22 @@ export const installCommands = {
       .command({
         command: 'skill',
         describe:
-          'Install planner and worker skills to .agent/skills and .claude/skills in current directory.',
+          'Install planner and worker skills. Use --here to install to ./skills in current directory (no .agent/.claude).',
         builder: (y: Argv) =>
-          y.option('cwd', {
-            type: 'string',
-            default: process.cwd(),
-            describe: 'Target directory (default: current working directory)',
-          }),
-        handler: (argv: { cwd?: string }) => {
+          y
+            .option('cwd', {
+              type: 'string',
+              default: process.cwd(),
+              describe: 'Target directory (default: current working directory)',
+            })
+            .option('here', {
+              type: 'boolean',
+              default: false,
+              describe: 'Install to ./skills in current directory (no .agent or .claude parent dirs)',
+            }),
+        handler: (argv: { cwd?: string; here?: boolean }) => {
           const targetRoot = (argv.cwd as string) || process.cwd();
-          const installed = installSkills(targetRoot);
+          const installed = installSkills(targetRoot, { here: argv.here });
           if (installed.length > 0) {
             console.log('Installed skills to:');
             for (const p of installed) {

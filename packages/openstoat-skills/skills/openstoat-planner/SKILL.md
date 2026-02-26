@@ -1,6 +1,7 @@
 ---
 name: openstoat-planner
-description: Plans and creates tasks in OpenStoat via CLI. Use when acting as Agent Planner, breaking down work into tasks, inserting tasks into OpenStoat Kanban, or when the user asks to plan tasks for OpenStoat.
+description: Plans and creates tasks in OpenStoat via CLI. Decomposes work into tasks, inserts tasks into OpenStoat Kanban, and manages task dependencies. Use when acting as Agent Planner, when the user mentions plan tasks, break down work, create tasks, openstoat, kanban, task planning, or work decomposition.
+metadata: {"openclaw":{"requires":{"bins":["openstoat"]},"emoji":"📋"}}
 ---
 
 # OpenStoat Planner

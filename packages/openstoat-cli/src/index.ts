@@ -33,7 +33,7 @@ const cli = yargs(hideBin(process.argv))
       '  task self-unblock  WORKER: rollback when blocked (--depends-on human_task required)\n' +
       '  task show <id>     Show task details\n' +
       '  daemon start       Start worker daemon (polls for ready agent_worker tasks)\n' +
-      '  install skill      Install planner and worker skills to .agent/skills and .claude/skills\n' +
+      '  install skill      Install planner and worker skills (--here for ./skills only)\n' +
       '  manual             Print full agent operational manual (SKILL-style)'
   )
   .command({
