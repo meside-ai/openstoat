@@ -2,14 +2,10 @@
   "name": "openstoat",
   "version": "0.1.0",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": ["packages/*"],
   "scripts": {
-    "build": "bun run --filter '*' build",
-    "test": "bun test",
-    "test:integration": "bun test packages/openstoat-cli/test/integration.test.ts",
-    "link:global": "sh -c 'bun run build && cd packages/openstoat-cli && rm -f \"$(npm root -g)/../../bin/openstoat\" && npm link'"
+    "build": "echo 'No packages yet'",
+    "test": "echo 'No tests yet'"
   },
   "devDependencies": {
     "@types/bun": "latest",
