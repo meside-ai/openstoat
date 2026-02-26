@@ -46,7 +46,15 @@ openstoat task create \
 
 ### 4. Project Context
 
-Ensure the project exists. List projects: `openstoat project ls`. Use the project `id` as `--project` when creating tasks.
+Project ID comes from `.openstoat.json` in the current directory:
+
+```json
+{
+  "project": "<project_id>"
+}
+```
+
+Use this `project` value as `--project` in all task commands. Ensure the project exists: `openstoat project ls`.
 
 ---
 
@@ -65,6 +73,8 @@ Ensure the project exists. List projects: `openstoat project ls`. Use the projec
 | Action | Command |
 |--------|---------|
 | List projects | `openstoat project ls` |
-| List unfinished tasks | `openstoat task ls --project X --status ready,in_progress` |
-| Create task | `openstoat task create --project X --title "..." --description "..." --acceptance-criteria "..." --status ready --owner agent_worker --task-type implementation` |
+| List unfinished tasks | `openstoat task ls --project <project> --status ready,in_progress` |
+| Create task | `openstoat task create --project <project> --title "..." --description "..." --acceptance-criteria "..." --status ready --owner agent_worker --task-type implementation` |
 | Create with deps | Add `--depends-on task_001 --depends-on task_002` |
+
+**Note**: `<project>` is the `project` value from `.openstoat.json`. Read it before running commands.

@@ -181,11 +181,26 @@ $ openstoat task show <task_id> [--json]
 ### 4.4 Daemon Commands
 
 ```bash
+$ openstoat daemon init        # Interactively create .openstoat.json
 $ openstoat daemon start       # Start worker-daemon
 $ openstoat daemon stop        # Stop daemon
 $ openstoat daemon status      # Check status
 $ openstoat daemon logs        # View logs
 ```
+
+Daemon and skills read config from `.openstoat.json` in the current directory:
+
+```json
+{
+  "project": "<project_id>",
+  "agent": "/path/to/agent-executable"
+}
+```
+
+- `project`: Project ID used as `--project` in task commands. Skills read this.
+- `agent`: Path to external agent. Daemon invokes this for ready agent_worker tasks.
+
+Run `openstoat daemon start` from the project root where `.openstoat.json` lives.
 
 ---
 
@@ -251,7 +266,7 @@ $ openstoat daemon logs        # View logs
 │   │                   --owner agent_worker --json")             │  │
 │   │     # Filter: dependencies must be satisfied                │  │
 │   │     for task in tasks:                                     │  │
-│   │       agent = config.get("agent")  # external agent         │  │
+│   │       agent = .openstoat.json in cwd         │  │
 │   │       exec(f"{agent} do-task --task-id {task.id}")         │  │
 │   │     sleep(poll_interval)                                    │  │
 │   └───────────────────────────────────────────────────────────┘  │

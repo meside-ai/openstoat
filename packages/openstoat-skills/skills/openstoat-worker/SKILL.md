@@ -37,13 +37,17 @@ openstoat task done <task_id> \
 - Include: execution context, key decisions, file locations, what downstream needs to know
 - **Never** put credentials in handoff body; describe where/how they were delivered
 
-### 4. Self-Unblock When Blocked by Human
+### 4. Project Context
+
+Project ID comes from `.openstoat.json` in the current directory. Use it as `--project` when creating human tasks (e.g. in self-unblock flow).
+
+### 5. Self-Unblock When Blocked by Human
 
 When stuck (e.g. need API key, approval):
 
 ```bash
-# 1. Create human task first
-openstoat task create --project <project_id> \
+# 1. Create human task first (use project from .openstoat.json)
+openstoat task create --project <project> \
   --title "Provide Paddle API key" \
   --description "Unblock payment integration" \
   --acceptance-criteria "Key delivered securely" \
@@ -56,7 +60,7 @@ openstoat task self-unblock <task_id> --depends-on <human_task_id> \
 
 Task moves `in_progress` → `ready`. After human completes the new task, your task becomes claimable again.
 
-### 5. Read Context Before Executing
+### 6. Read Context Before Executing
 
 For tasks with dependencies, read upstream handoffs and logs:
 
@@ -88,3 +92,5 @@ openstoat task show <task_id> [--json]
 | Complete task | `openstoat task done <id> --output "..." --handoff-summary "..." --logs-append "..."` |
 | Self-unblock | `openstoat task self-unblock <id> --depends-on <human_task_id> --logs-append "..."` |
 | Show task | `openstoat task show <id>` |
+
+**Note**: `<project>` is the `project` value from `.openstoat.json`. Use it when creating human tasks in self-unblock flow.

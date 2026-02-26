@@ -2,15 +2,19 @@
  * OpenStoat Worker Daemon
  * Polls for ready agent_worker tasks and invokes external agents.
  * OpenStoat does not run LLM inference; daemon invokes external agents.
+ * Agent path is read from .openstoat.json in current directory.
  */
 
-import { getDb } from 'openstoat-core';
+import { getDb, loadProjectConfig } from 'openstoat-core';
 import { listTasks, areDependenciesSatisfied } from 'openstoat-core';
 
 export function startDaemon(pollIntervalMs = 5000): void {
-  const agentPath = getConfig('agent');
+  const config = loadProjectConfig();
+  const agentPath = config?.agent ?? null;
   if (!agentPath) {
-    console.log('No agent configured. Daemon will poll but not execute tasks.');
+    console.log(
+      'No agent configured. Add "agent" to .openstoat.json in current directory. Daemon will poll but not execute tasks.'
+    );
   }
 
   const run = () => {
@@ -37,11 +41,4 @@ export function startDaemon(pollIntervalMs = 5000): void {
     setTimeout(run, pollIntervalMs);
   };
   run();
-}
-
-function getConfig(key: string): string | null {
-  const row = getDb().query('SELECT value FROM config WHERE key = ?').get(key) as {
-    value: string;
-  } | null;
-  return row?.value ?? null;
 }

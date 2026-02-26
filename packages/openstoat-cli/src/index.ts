@@ -32,6 +32,7 @@ const cli = yargs(hideBin(process.argv))
       '  task done <id>     WORKER: complete (--output, --handoff-summary min 200 chars)\n' +
       '  task self-unblock  WORKER: rollback when blocked (--depends-on human_task required)\n' +
       '  task show <id>     Show task details\n' +
+      '  daemon init       Interactively create .openstoat.json\n' +
       '  daemon start       Start worker daemon (polls for ready agent_worker tasks)\n' +
       '  install skill      Install planner and worker skills (--here for current dir)\n' +
       '  manual             Print full agent operational manual (SKILL-style)'

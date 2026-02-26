@@ -1,0 +1,4 @@
+{
+  "project": "<project_id>",
+  "agent": "/path/to/your/agent-executable"
+}

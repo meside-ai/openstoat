@@ -114,9 +114,13 @@ Rollback in_progress → ready when blocked by human. Must add new --depends-on.
 ### task show <task_id>
 Show task details. Use --json for machine-readable output.
 
+### daemon init
+Interactively create \`.openstoat.json\` (project, agent) in current directory.
+
 ### daemon start
 Start worker daemon. Polls for ready agent_worker tasks and invokes external agents.
   --poll-interval (default 5000): Poll interval in ms.
+  Config: read from \`.openstoat.json\` in current directory. Example: \`{ "project": "<project_id>", "agent": "/path/to/agent" }\`
 
 ### daemon stop | status | logs
 Stop, check status, or view daemon logs.
