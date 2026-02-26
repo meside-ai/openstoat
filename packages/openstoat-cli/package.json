@@ -1,7 +1,6 @@
 {
   "name": "openstoat-cli",
   "version": "0.1.0",
-  "private": true,
   "bin": {
     "openstoat": "./bin/openstoat"
   },
@@ -15,6 +14,7 @@
     "openstoat-daemon": "workspace:*",
     "openstoat-skills": "workspace:*",
     "openstoat-types": "workspace:*",
+    "openstoat-web": "workspace:*",
     "yargs": "^17.7.2"
   },
   "devDependencies": {

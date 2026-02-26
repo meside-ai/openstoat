@@ -44,7 +44,23 @@ openstoat task create \
 - `task_type`: `implementation`, `testing`, `review`, `credentials`, `deploy`, `docs`, `custom`
 - Template defaults: `credentials`, `review`, `deploy` often → `human_worker`
 
-### 4. Project Context
+### 4. Credential and Certificate Dependencies (Mandatory)
+
+**When decomposing work, you MUST identify any credential or certificate dependencies.** If an agent task requires secrets, tokens, or keys that only humans can provide or configure, you MUST:
+
+1. Create a **human_worker** task with `--task-type credentials` (or `deploy` if deployment secrets)
+2. Add that human task as `--depends-on` for the agent task that needs the credential
+
+**Examples of credential dependencies requiring a human task:**
+
+- **GitHub Secrets / NPM_TOKEN**: CI/CD or GitHub Actions that need `NPM_TOKEN`, `GITHUB_TOKEN`, or other secrets — human must add them in GitHub repo Settings → Secrets
+- **API Keys**: Paddle, Stripe, OpenAI, or third-party API keys — human must obtain and configure
+- **Deployment credentials**: SSH keys, cloud provider credentials, container registry tokens — human must provision
+- **Certificates**: TLS certs, code signing certs — human must obtain and install
+
+**Do NOT** create an agent task that assumes credentials exist without a preceding human task. The agent worker will self-unblock if it hits a missing credential, but planning correctly avoids wasted work.
+
+### 5. Project Context
 
 Project ID comes from `.openstoat.json` in the current directory:
 
@@ -61,6 +77,7 @@ Use this `project` value as `--project` in all task commands. Ensure the project
 ## What NOT to Do
 
 - **Do not create** without listing `ready,in_progress` tasks first
+- **Do not create** agent tasks that depend on credentials (NPM_TOKEN, API keys, GitHub Secrets, etc.) without first creating a human_worker credentials task and adding it as `--depends-on`
 - **Do not create** a duplicate when an equivalent unfinished task exists
 - **Do not omit** any required field
 - **Do not use** invalid statuses: `todo`, `ai_ready`, `waiting_human`, `blocked`, `review`, `human_done` — only `ready`, `in_progress`, `done` are valid
