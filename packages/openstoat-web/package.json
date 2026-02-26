@@ -1,0 +1,17 @@
+{
+  "name": "@openstoat/web",
+  "version": "0.1.0",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "build": "tsc",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "@openstoat/core": "workspace:*",
+    "@openstoat/types": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

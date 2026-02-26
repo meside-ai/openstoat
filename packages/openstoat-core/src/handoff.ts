@@ -25,6 +25,12 @@ export function createHandoff(params: {
   return rowToHandoff(row);
 }
 
+export function listHandoffs(): Handoff[] {
+  const db = getDb();
+  const rows = db.query('SELECT * FROM handoffs ORDER BY created_at DESC').all() as HandoffRow[];
+  return rows.map(rowToHandoff);
+}
+
 export function listHandoffsByTask(taskId: string): Handoff[] {
   const db = getDb();
   const rows = db

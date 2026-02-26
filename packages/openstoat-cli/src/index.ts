@@ -8,6 +8,7 @@ import { taskCmd } from './commands/task';
 import { templateCmd } from './commands/template';
 import { daemonCmd } from './commands/daemon';
 import { handoffCmd } from './commands/handoff';
+import { webCmd } from './commands/web';
 
 const MAIN_EPILOG = `
 ═══════════════════════════════════════════════════════════════════════════════
@@ -139,6 +140,7 @@ RULES & REFERENCE
   template   ls / show / add / rm / set-default
   daemon     start / stop / status / logs
   handoff    ls / show
+  web        Start web UI server
 
   Every subcommand supports --help for detailed usage.
 `;
@@ -153,6 +155,7 @@ const cli = yargs(hideBin(process.argv))
   .command(templateCmd)
   .command(daemonCmd)
   .command(handoffCmd)
+  .command(webCmd)
   .demandCommand(1, 'Please specify a command. Use --help for usage.')
   .help()
   .alias('h', 'help')

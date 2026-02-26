@@ -10,7 +10,7 @@
       },
     },
     "packages/openstoat-cli": {
-      "name": "openstoat-cli",
+      "name": "openstoat",
       "version": "0.1.0",
       "bin": {
         "openstoat": "bin/openstoat",
@@ -19,6 +19,7 @@
         "@openstoat/core": "workspace:*",
         "@openstoat/daemon": "workspace:*",
         "@openstoat/types": "workspace:*",
+        "@openstoat/web": "workspace:*",
         "yargs": "^17.7.2",
       },
       "devDependencies": {
@@ -53,6 +54,17 @@
         "typescript": "^5.0.0",
       },
     },
+    "packages/openstoat-web": {
+      "name": "@openstoat/web",
+      "version": "0.1.0",
+      "dependencies": {
+        "@openstoat/core": "workspace:*",
+        "@openstoat/types": "workspace:*",
+      },
+      "devDependencies": {
+        "typescript": "^5.0.0",
+      },
+    },
   },
   "packages": {
     "@openstoat/core": ["@openstoat/core@workspace:packages/openstoat-core"],
@@ -60,6 +72,8 @@
     "@openstoat/daemon": ["@openstoat/daemon@workspace:packages/openstoat-daemon"],
 
     "@openstoat/types": ["@openstoat/types@workspace:packages/openstoat-types"],
+
+    "@openstoat/web": ["@openstoat/web@workspace:packages/openstoat-web"],
 
     "@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
@@ -85,7 +99,7 @@
 
     "is-fullwidth-code-point": ["is-fullwidth-code-point@3.0.0", "", {}, "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg=="],
 
-    "openstoat-cli": ["openstoat-cli@workspace:packages/openstoat-cli"],
+    "openstoat": ["openstoat@workspace:packages/openstoat-cli"],
 
     "require-directory": ["require-directory@2.1.1", "", {}, "sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q=="],
 
