@@ -10,74 +10,75 @@
       },
     },
     "packages/openstoat-cli": {
-      "name": "openstoat",
+      "name": "openstoat-cli",
       "version": "0.1.0",
       "bin": {
-        "openstoat": "bin/openstoat",
+        "openstoat": "./bin/openstoat",
       },
       "dependencies": {
-        "@openstoat/core": "workspace:*",
-        "@openstoat/daemon": "workspace:*",
-        "@openstoat/types": "workspace:*",
-        "@openstoat/web": "workspace:*",
+        "openstoat-core": "workspace:*",
+        "openstoat-daemon": "workspace:*",
+        "openstoat-types": "workspace:*",
         "yargs": "^17.7.2",
       },
       "devDependencies": {
+        "@types/bun": "latest",
         "@types/node": "^20.0.0",
+        "@types/yargs": "^17.0.35",
         "typescript": "^5.0.0",
       },
     },
     "packages/openstoat-core": {
-      "name": "@openstoat/core",
+      "name": "openstoat-core",
       "version": "0.1.0",
       "dependencies": {
-        "@openstoat/types": "workspace:*",
+        "openstoat-types": "workspace:*",
       },
       "devDependencies": {
+        "@types/bun": "latest",
         "typescript": "^5.0.0",
       },
     },
     "packages/openstoat-daemon": {
-      "name": "@openstoat/daemon",
+      "name": "openstoat-daemon",
       "version": "0.1.0",
       "dependencies": {
-        "@openstoat/core": "workspace:*",
+        "openstoat-core": "workspace:*",
       },
       "devDependencies": {
+        "@types/bun": "latest",
         "typescript": "^5.0.0",
       },
     },
     "packages/openstoat-types": {
-      "name": "@openstoat/types",
+      "name": "openstoat-types",
       "version": "0.1.0",
       "devDependencies": {
         "typescript": "^5.0.0",
       },
     },
     "packages/openstoat-web": {
-      "name": "@openstoat/web",
+      "name": "openstoat-web",
       "version": "0.1.0",
       "dependencies": {
-        "@openstoat/core": "workspace:*",
-        "@openstoat/types": "workspace:*",
+        "openstoat-core": "workspace:*",
+        "openstoat-types": "workspace:*",
       },
       "devDependencies": {
+        "@types/bun": "latest",
+        "@types/node": "^20.0.0",
         "typescript": "^5.0.0",
       },
     },
   },
   "packages": {
-    "@openstoat/core": ["@openstoat/core@workspace:packages/openstoat-core"],
-
-    "@openstoat/daemon": ["@openstoat/daemon@workspace:packages/openstoat-daemon"],
-
-    "@openstoat/types": ["@openstoat/types@workspace:packages/openstoat-types"],
-
-    "@openstoat/web": ["@openstoat/web@workspace:packages/openstoat-web"],
-
     "@types/bun": ["@types/bun@1.3.9", "", { "dependencies": { "bun-types": "1.3.9" } }, "sha512-KQ571yULOdWJiMH+RIWIOZ7B2RXQGpL1YQrBtLIV3FqDcCu6FsbFUBwhdKUlCKUpS3PJDsHlJ1QKlpxoVR+xtw=="],
 
     "@types/node": ["@types/node@20.19.33", "", { "dependencies": { "undici-types": "~6.21.0" } }, "sha512-Rs1bVAIdBs5gbTIKza/tgpMuG1k3U/UMJLWecIMxNdJFDMzcM5LOiLVRYh3PilWEYDIeUDv7bpiHPLPsbydGcw=="],
+
+    "@types/yargs": ["@types/yargs@17.0.35", "", { "dependencies": { "@types/yargs-parser": "*" } }, "sha512-qUHkeCyQFxMXg79wQfTtfndEC+N9ZZg76HJftDJp+qH2tV7Gj4OJi7l+PiWwJ+pWtW8GwSmqsDj/oymhrTWXjg=="],
+
+    "@types/yargs-parser": ["@types/yargs-parser@21.0.3", "", {}, "sha512-I4q9QU9MQv4oEOz4tAHJtNz1cwuLxn2F3xcc2iV5WdqLPpUnj30aUuxt1mAxYTG+oe8CZMV/+6rU4S4gRDzqtQ=="],
 
     "ansi-regex": ["ansi-regex@5.0.1", "", {}, "sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ=="],
 
@@ -99,7 +100,15 @@
 
     "is-fullwidth-code-point": ["is-fullwidth-code-point@3.0.0", "", {}, "sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg=="],
 
-    "openstoat": ["openstoat@workspace:packages/openstoat-cli"],
+    "openstoat-cli": ["openstoat-cli@workspace:packages/openstoat-cli"],
+
+    "openstoat-core": ["openstoat-core@workspace:packages/openstoat-core"],
+
+    "openstoat-daemon": ["openstoat-daemon@workspace:packages/openstoat-daemon"],
+
+    "openstoat-types": ["openstoat-types@workspace:packages/openstoat-types"],
+
+    "openstoat-web": ["openstoat-web@workspace:packages/openstoat-web"],
 
     "require-directory": ["require-directory@2.1.1", "", {}, "sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q=="],
 

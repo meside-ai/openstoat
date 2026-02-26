@@ -4,8 +4,13 @@
   "private": true,
   "workspaces": ["packages/*"],
   "scripts": {
-    "build": "echo 'No packages yet'",
-    "test": "echo 'No tests yet'"
+    "build": "cd packages/openstoat-types && bun run build && cd ../openstoat-core && bun run build && cd ../openstoat-daemon && bun run build && cd ../openstoat-cli && bun run build && cd ../openstoat-web && bun run build",
+    "test": "bun test",
+    "test:integration": "bun test tests/integration",
+    "openstoat": "bun run packages/openstoat-cli/dist/index.js",
+    "web": "bun run packages/openstoat-web/src/index.ts",
+    "web:dev": "bun run --watch packages/openstoat-web/src/index.ts",
+    "link:global": "bun run build && cd packages/openstoat-cli && npm link --force"
   },
   "devDependencies": {
     "@types/bun": "latest",

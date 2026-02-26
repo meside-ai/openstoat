@@ -1,0 +1,25 @@
+{
+  "name": "openstoat-cli",
+  "version": "0.1.0",
+  "private": true,
+  "bin": {
+    "openstoat": "./bin/openstoat"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "openstoat-core": "workspace:*",
+    "openstoat-daemon": "workspace:*",
+    "openstoat-types": "workspace:*",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0",
+    "@types/yargs": "^17.0.35",
+    "typescript": "^5.0.0"
+  }
+}
