@@ -35,8 +35,16 @@ const cli = yargs(hideBin(process.argv))
       '  daemon init       Interactively create .openstoat.json\n' +
       '  daemon start       Start worker daemon (polls for ready agent_worker tasks)\n' +
       '  install skill      Install planner and worker skills (--here for current dir)\n' +
+      '  web                Start Web UI server (http://localhost:3080)\n' +
       '  manual             Print full agent operational manual (SKILL-style)'
   )
+  .command({
+    command: 'web',
+    describe: 'Start Web UI server. Opens http://localhost:3080 (set PORT env to change).',
+    handler: async () => {
+      await import('openstoat-web');
+    },
+  })
   .command({
     command: 'manual',
     describe: 'Print full agent operational manual. Use when agent needs detailed workflow, rules, and examples.',

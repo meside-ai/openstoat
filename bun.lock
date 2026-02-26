@@ -20,6 +20,7 @@
         "openstoat-daemon": "workspace:*",
         "openstoat-skills": "workspace:*",
         "openstoat-types": "workspace:*",
+        "openstoat-web": "workspace:*",
         "yargs": "^17.7.2",
       },
       "devDependencies": {
