@@ -10,40 +10,63 @@ import {
 } from '@openstoat/core';
 
 const PLAN_EPILOG = `
-Plan is a project goal container with multiple Tasks. plan add parses text into tasks and
-assigns owner (ai/human) via the default template.
+A Plan is a goal broken into Tasks. When you create a plan with "plan add", the system
+parses your text into tasks and auto-assigns owner (ai/human) using the default template's
+keyword matching rules.
+
+## Agent Workflow: Creating a Plan (Planner Agent)
+
+  Your job: break a goal into tasks. You do NOT execute tasks afterward —
+  the daemon will schedule ai_ready tasks to Executor Agents.
+
+  1. FIRST, read the template to know which keywords trigger human tasks:
+     openstoat template show <template_id>
+     → e.g. "api_key", "review", "deploy" → human; everything else → ai
+
+  2. Write a clear plan with numbered steps:
+     openstoat plan add "Integrate Paddle payment
+     1. Add Paddle to PaymentProvider enum
+     2. Provide Paddle API Key
+     3. Implement PaddlePaymentService
+     4. Write unit tests
+     5. Code review
+     6. Deploy to staging"
+     → First line = plan title
+     → Each numbered/bulleted line = one task
+     → Keywords in task titles are matched to template rules
+
+  3. Verify the result:
+     openstoat plan show <plan_id>
+     → Confirm tasks are correctly split and owners properly assigned.
+
+  4. Done. The daemon picks up ai_ready tasks automatically.
+
+## Plan Content Format
+
+  First line = plan title. Remaining lines are tasks.
+  Supported formats:
+    Numbered:  1. Task one  2. Task two
+    Bullets:   - Task one   * Task two
 
 ## Subcommands
 
-add <content>    Create plan and parse tasks
-                 First line = title; supports:
-                 - Numbered: 1. Task one  2. Task two
-                 - Bullets: - Task one  * Task two
-                 Template matches keywords (review, deploy, API Key) to identify human tasks
+  add <content>      Create plan, auto-split into tasks, assign owners via template
+  ls                 List all plans (id, title, status)
+  show <plan_id>     Show plan details and all its tasks
+  rm <plan_id>       Delete plan and all its tasks
+  status <plan_id>   Show progress (done/total tasks)
 
-ls               List all plans (id, title, status)
+## Template Keyword Matching Example
 
-show <plan_id>   Show plan details and tasks
-
-rm <plan_id>     Delete plan (and all its tasks)
-
-status <plan_id> Show plan progress (done/total)
-
-## Plan format example
-
-  Integrate Paddle payment
-  1. Add Paddle to enum
-  2. Provide Paddle API Key
-  3. Implement PaddlePaymentService
-  4. Code review
-  5. Deploy to staging
-
-  Steps 2, 4, 5 match keywords → human tasks; others → ai tasks.
+  "Provide Paddle API Key"  → matches "API Key" keyword → owner=human (credentials)
+  "Code review"             → matches "review" keyword  → owner=human (code_review)
+  "Deploy to staging"       → matches "deploy" keyword  → owner=human (deploy)
+  "Add Paddle to enum"      → no keyword match          → owner=ai (implementation)
 `;
 
 export const planCmd = {
   command: 'plan <action> [idOrContent..]',
-  describe: 'Plan management: create, list, view, delete plans; add parses content and assigns AI/human',
+  describe: 'Create goals and auto-split into AI/human tasks via template matching',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .positional('action', {

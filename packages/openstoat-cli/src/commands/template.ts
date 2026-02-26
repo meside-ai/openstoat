@@ -9,44 +9,58 @@ import {
 import { readFileSync } from 'fs';
 
 const TEMPLATE_EPILOG = `
-Template defines workflow rules: which task types require human input. plan add uses the default
-template to match task types (via keywords) and assign owner (ai/human).
+Templates define the rules for splitting work between you (AI) and humans.
+When "plan add" creates tasks, it uses the DEFAULT template's keywords to decide
+each task's owner. You SHOULD read the template before creating plans.
+
+## Agent Workflow
+
+  BEFORE creating a plan, read the active template:
+    openstoat template ls                     # Find the default template
+    openstoat template show <template_id>     # Read its rules and keywords
+
+  This tells you which keywords trigger human ownership:
+    "api_key", "secret" → credentials → human
+    "review", "code review" → code_review → human
+    "deploy", "release" → deploy → human
+    Everything else → implementation → ai
+
+  Knowing this, you can write plan steps that correctly trigger the right owner.
 
 ## Subcommands
 
-ls                 List all templates; default is marked (default)
+  ls                    List all templates; default is marked (default)
+  show <template_id>    Show full template JSON (rules + keywords)
+  add -f <file>         Add template from JSON file
+  rm <template_id>      Delete template
+  set-default <id>      Set as default template (used by plan add)
 
-show <template_id> Show full template JSON (rules, keywords)
-
-add                Add template from JSON file; requires -f <file>
-
-rm <template_id>   Delete template
-
-set-default <template_id>  Set as default; used by plan add
-
-## Template JSON format
+## Template JSON Format
 
   {
     "name": "My Workflow",
     "version": "1.0",
     "rules": [
-      { "task_type": "credentials", "requires_human": true, "human_action": "provide_input", "prompt": "Provide {field}" },
+      { "task_type": "credentials", "requires_human": true, "human_action": "provide_input" },
       { "task_type": "code_review", "requires_human": true },
-      { "task_type": "implementation", "requires_human": false }
+      { "task_type": "deploy", "requires_human": true },
+      { "task_type": "implementation", "requires_human": false },
+      { "task_type": "testing", "requires_human": false }
     ],
     "keywords": {
-      "credentials": ["api_key", "secret", "API Key"],
-      "code_review": ["review", "code review"]
+      "credentials": ["api_key", "secret", "API Key", "password"],
+      "code_review": ["review", "code review", "PR"],
+      "deploy": ["deploy", "release", "staging", "production"]
     }
   }
 
-  rules:    Whether each task_type requires human
-  keywords: Task title/description matches keywords → maps to task_type
+  rules:    Defines whether each task_type requires human
+  keywords: When a task title contains these words → mapped to that task_type
 `;
 
 export const templateCmd = {
   command: 'template <action> [id..]',
-  describe: 'Workflow template management: define which task types need human; plan add uses default',
+  describe: 'Read workflow rules: which task types need human (read BEFORE creating plans)',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .positional('action', {

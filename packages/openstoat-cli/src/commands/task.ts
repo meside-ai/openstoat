@@ -11,47 +11,56 @@ import {
 import type { TaskStatus, TaskOwner } from '@openstoat/types';
 
 const TASK_EPILOG = `
-Task is the smallest unit of work, owned by ai or human. Completing a task triggers downstream
-dependent tasks to become ai_ready.
+Task is the smallest work unit. Each task has an owner (ai or human) and a status.
+Completing a task triggers downstream dependent tasks to become ai_ready.
+
+## Executor Agent Workflow (daemon invokes you to work on a task)
+
+  1. Get task details and upstream context:
+     openstoat task show <task_id>
+     openstoat handoff ls --task <task_id>
+
+  2. Execute the task.
+
+  3. Mark complete (triggers downstream, daemon handles the rest):
+     openstoat task done <task_id>
+
+  If blocked, escalate to human:
+     openstoat task need-human <task_id> --reason "explain what you need"
+
+  If review was rejected, add a fix sub-task:
+     openstoat task add --plan <plan_id> --title "Fix review comments" --owner ai
+     openstoat task depend <new_task_id> --on <original_task_id>
 
 ## Subcommands
 
-add              Manually add task; requires --plan, --title, --owner
+  add              Add task; requires --plan, --title, --owner (ai|human)
+  ls               List tasks; filters: --status, --owner, --plan; use --json for parsing
+  show <task_id>   Show task details (title, owner, status, dependencies, description)
+  done <task_id>   Mark done and trigger downstream tasks
+  update <task_id> Update status manually; requires --status
+  need-human <id>  Escalate to human; optional --reason
+  depend <id>      Add dependency; requires --on <dep_task_id>
 
-ls               List tasks; supports filters:
-                 --status: pending|ai_ready|in_progress|waiting_human|human_done|done
-                 --owner: ai|human
-                 --plan: plan_id
-                 --json: output JSON
+## Status Flow
 
-show <task_id>   Show task details
+  pending         → ai_ready (when all dependencies are done AND owner=ai)
+  ai_ready        → in_progress (you start working)
+  in_progress     → done (complete) or waiting_human (need human input)
+  waiting_human   → human_done (human completed their part)
+  human_done      → done (confirmed complete)
 
-done <task_id>   Mark done, trigger downstream tasks
+## Key Flags
 
-update <task_id> Update status; requires --status
-
-need-human <task_id>  Escalate AI task to human; optional --reason
-
-depend <task_id> Add dependency; requires --on <dep_task_id> (task_id depends on dep_task_id)
-
-## Status flow
-
-  pending -> ai_ready (deps done and owner=ai)
-  ai_ready -> in_progress (started)
-  in_progress -> done (complete) or waiting_human (needs human)
-  waiting_human -> human_done (human completed)
-  human_done -> done (confirmed)
-
-## Common usage
-
-  openstoat task ls --status ai_ready     List executable AI tasks
-  openstoat task done task_xxx            Complete task, trigger downstream
-  openstoat task need-human task_xxx --reason "needs review"  Escalate to human
+  --json           Output JSON (use this when you need to parse output)
+  --status <s>     Filter by status (ls) or set status (update)
+  --owner ai|human Filter by owner (ls) or set owner (add)
+  --plan <id>      Filter by plan (ls) or assign to plan (add)
 `;
 
 export const taskCmd = {
   command: 'task <action> [taskId..]',
-  describe: 'Task management: add, list, complete, update tasks; status filters and dependencies',
+  describe: 'Your main interface: find ai_ready work, execute, mark done, escalate to human',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .positional('action', {

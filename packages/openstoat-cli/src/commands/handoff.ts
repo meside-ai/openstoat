@@ -2,23 +2,40 @@ import type { ArgumentsCamelCase } from 'yargs';
 import { listHandoffsByTask, getHandoff } from '@openstoat/core';
 
 const HANDOFF_EPILOG = `
-Handoff is context passed from a completed task to downstream tasks (summary + artifacts).
-Created when task done runs; downstream tasks can reference it.
+Handoffs carry context (summary + artifacts) from completed upstream tasks to you.
+They are your primary source of information when picking up a task.
+
+## Agent Workflow: Getting Context Before You Start
+
+  BEFORE executing any task, check for upstream handoffs:
+
+    openstoat handoff ls --task <task_id>
+
+  If handoffs exist, read them:
+
+    openstoat handoff show <handoff_id>
+
+  A handoff contains:
+    summary    What the upstream task accomplished
+    artifacts  Files created/modified, credentials provided, decisions made
+
+  Example: If task B (human provides API key) → task C (you implement service),
+  the handoff from B→C tells you the API key value and environment (sandbox/prod).
 
 ## Subcommands
 
-ls --task <task_id>  List handoffs related to a task (as from or to)
-show <handoff_id>   Show handoff details (JSON)
+  ls --task <task_id>   List handoffs for a task (both incoming and outgoing)
+  show <handoff_id>     Show full handoff details as JSON
 
-## Use cases
+## When handoffs are created
 
-- Inspect context passed from task A to task B
-- Debug task dependencies and information flow
+  Handoffs are created automatically when "task done" is called.
+  They link the completed task to its downstream dependents.
 `;
 
 export const handoffCmd = {
   command: 'handoff <action> [id..]',
-  describe: 'Handoff records: context passed to downstream when tasks complete (summary, artifacts)',
+  describe: 'Read upstream context: summaries and artifacts from completed tasks (check BEFORE starting work)',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .positional('action', {

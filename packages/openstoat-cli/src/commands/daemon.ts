@@ -18,30 +18,41 @@ function getDaemonPath(): string {
 }
 
 const DAEMON_EPILOG = `
-Daemon is a background process that auto-schedules ai_ready AI tasks. Runs in background, polling and executing.
+The daemon is a background process that auto-discovers ai_ready tasks and invokes
+the configured agent to execute them. It enables unattended AI execution.
+
+## How It Works
+
+  1. Daemon polls for tasks with status=ai_ready at a configurable interval
+  2. For each discovered task, it invokes the configured agent
+  3. Agent executes the task and calls "openstoat task done <id>"
+  4. Completing a task may trigger new ai_ready tasks → daemon picks them up
+
+  Setup before starting:
+    openstoat config set agent "openclaw"     # Which agent to invoke
+    openstoat config set poll-interval 60     # Poll every 60 seconds
 
 ## Subcommands
 
-start   Start daemon in background
-stop    Stop daemon
-status  Check if daemon is running
-logs    View daemon logs (written to daemon.log in data dir)
+  start    Start daemon in background (skips if already running)
+  stop     Stop daemon gracefully (SIGTERM)
+  status   Check if daemon is running
+  logs     View daemon log output
 
-## How it works
+## Agent Note
 
-- Daemon polls for ai_ready tasks periodically
-- Configure external agent via config set agent <path>
-- PID stored in daemon.pid in data dir
+  The daemon invokes YOU. When you are called by the daemon, your job is:
+    1. openstoat task show <task_id>          # Read what to do
+    2. openstoat handoff ls --task <task_id>  # Get upstream context
+    3. Execute the work
+    4. openstoat task done <task_id>          # Signal completion
 
-## Notes
-
-- start skips if already running
-- stop sends SIGTERM for graceful shutdown
+  You typically don't need to start/stop the daemon yourself — the human manages it.
 `;
 
 export const daemonCmd = {
   command: 'daemon <action>',
-  describe: 'Background daemon: auto-schedule ai_ready AI tasks for unattended execution',
+  describe: 'Background scheduler: auto-discovers ai_ready tasks and invokes agent (managed by human)',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .positional('action', {

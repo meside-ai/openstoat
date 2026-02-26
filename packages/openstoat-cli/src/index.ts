@@ -11,49 +11,136 @@ import { handoffCmd } from './commands/handoff';
 
 const MAIN_EPILOG = `
 ═══════════════════════════════════════════════════════════════════════════════
-OpenStoat Usage (CLI is the manual)
+OpenStoat — AI Agent Instruction Manual
 ═══════════════════════════════════════════════════════════════════════════════
 
-## Overview
+## What is OpenStoat?
 
-OpenStoat is an AI ↔ Human task queue. AI handles tasks that don't need human input;
-when humans complete tasks, downstream AI tasks become executable automatically.
+A task queue that decouples AI and Human work. You (the AI agent) use this CLI
+to coordinate with humans. There is no LLM inside OpenStoat — YOU provide the
+intelligence. OpenStoat only stores plans, tasks, and context (handoffs).
 
-- Local-first, CLI-first; no cloud, no API keys
-- No LLM calls; planning done by external agents
-- 1 human + N AI agents; humans are the bottleneck, AI fills idle time
+Storage: local SQLite at ~/.openstoat/   No cloud, no API keys required.
 
-## Core concepts
+## Two Agent Roles
 
-  Plan      Project goal with multiple Tasks
-  Task      Smallest unit of work, owned by ai or human
-  Template  Defines which task types need human input
-  Handoff   Context passed to downstream when a task completes
+  Planner Agent — receives a goal from human, creates a Plan (breaks it into tasks).
+                  Does NOT execute tasks. Your job ends after plan add.
 
-## Quick start
+  Executor Agent — invoked by the daemon to execute a single ai_ready task.
+                   Reads context, does the work, marks task done.
 
-  1. openstoat init                    # Required first time
-  2. openstoat plan add "Goal\\n1. Task 1\\n2. Task 2"   # Create plan
-  3. openstoat task ls                 # List tasks
-  4. openstoat task done <task_id>     # Complete task, trigger downstream
-  5. openstoat daemon start            # Optional: auto-schedule AI tasks
+  These are different AI agents. The daemon schedules Executor work.
 
-## Command reference
+## Core Concepts
 
-  init      Initialize environment
-  config    View/set config
-  plan      Plans: add/ls/show/rm/status
-  task      Tasks: add/ls/show/done/update/need-human/depend
-  template  Templates: ls/show/add/rm/set-default
-  daemon    Daemon: start/stop/status/logs
-  handoff   Handoffs: ls/show
+  Plan      A goal broken into multiple Tasks
+  Task      Smallest work unit; owner is ai or human; has a status
+  Template  Rules that decide which task types need human (matched by keywords)
+  Handoff   Context (summary + artifacts) passed from completed task to downstream
+  Daemon    Background scheduler that discovers ai_ready tasks and invokes Executor
 
-## Detailed help
+## First-time Setup
 
-  Each subcommand supports --help, e.g.:
-    openstoat init --help
-    openstoat plan --help
-    openstoat task --help
+  openstoat init                          # Creates ~/.openstoat and database
+  openstoat template ls                   # Verify default template exists
+
+═══════════════════════════════════════════════════════════════════════════════
+SCENARIO WORKFLOWS
+═══════════════════════════════════════════════════════════════════════════════
+
+## Scenario 1: Create a Plan (Planner Agent)
+
+  Human gives you a goal. Your job: break it into tasks and write the plan.
+  You do NOT execute tasks — the daemon will schedule them to Executor Agents.
+
+  1. Read the template to understand which tasks need humans:
+     openstoat template show <template_id>
+
+  2. Break the goal into numbered steps and create a plan:
+     openstoat plan add "Integrate Paddle payment
+     1. Add Paddle to PaymentProvider enum
+     2. Provide Paddle API Key
+     3. Implement PaddlePaymentService
+     4. Write unit tests
+     5. Code review
+     6. Deploy to staging"
+     → The system auto-assigns owner (ai/human) via template keyword matching.
+       e.g. "API Key" → human (credentials), "Code review" → human, rest → ai.
+
+  3. Verify the result:
+     openstoat plan show <plan_id>
+     → Confirm tasks are correctly split and owners properly assigned.
+
+  4. Done. The daemon will pick up ai_ready tasks and invoke Executor Agents.
+
+## Scenario 2: Execute a task (Executor Agent — most common)
+
+  The daemon invokes you to work on a specific ai_ready task.
+
+  1. Get full details and upstream context:
+     openstoat task show <task_id>
+     openstoat handoff ls --task <task_id>
+     → Handoffs contain summaries and artifacts from completed upstream tasks.
+       Use this context to inform your work.
+
+  2. Execute the task.
+
+  3. Mark complete:
+     openstoat task done <task_id>
+     → This triggers downstream tasks automatically. The daemon handles the rest.
+
+## Scenario 3: You are blocked — need human input (Executor Agent)
+
+  When you cannot proceed (missing credentials, unclear requirements, etc.):
+
+  openstoat task need-human <task_id> --reason "API signature differs from docs, need confirmation"
+  → Status changes to waiting_human. Human is notified.
+  → After human resolves it, downstream tasks become ai_ready and the daemon resumes.
+
+## Scenario 4: Check progress (Planner or Executor Agent)
+
+  openstoat plan status <plan_id>           # Progress: done/total
+  openstoat task ls --status waiting_human   # Tasks blocked on humans
+  openstoat task ls --owner human            # All human-owned tasks
+
+## Scenario 5: Add sub-tasks after review rejection (Executor Agent)
+
+  openstoat task add --plan <plan_id> --title "Fix review comments" --owner ai
+  openstoat task depend <new_task_id> --on <review_task_id>
+  → The new task won't start until the review task is done. Daemon picks it up.
+
+═══════════════════════════════════════════════════════════════════════════════
+RULES & REFERENCE
+═══════════════════════════════════════════════════════════════════════════════
+
+## Important Rules
+
+  • ALWAYS use --json when you need to parse output programmatically.
+  • ALWAYS check handoffs before starting a task (they carry upstream context).
+  • ALWAYS mark tasks done when complete (this triggers the next tasks).
+  • If creating sub-tasks after review, add proper dependencies with depend.
+
+## Task Status Reference
+
+  pending         Task created but dependencies not yet satisfied
+  ai_ready        All dependencies done AND owner=ai → YOU can start this
+  in_progress     Currently being worked on
+  waiting_human   Blocked on human input
+  human_done      Human finished their part
+  done            Completed; downstream tasks may now be triggered
+
+## Command Reference
+
+  init       Initialize environment (run once)
+  config     View/set config (e.g. agent name for daemon)
+  plan       add / ls / show / rm / status
+  task       add / ls / show / done / update / need-human / depend
+  template   ls / show / add / rm / set-default
+  daemon     start / stop / status / logs
+  handoff    ls / show
+
+  Every subcommand supports --help for detailed usage.
 `;
 
 const cli = yargs(hideBin(process.argv))

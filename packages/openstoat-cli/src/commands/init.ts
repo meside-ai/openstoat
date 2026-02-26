@@ -4,36 +4,35 @@ import { mkdirSync, writeFileSync } from 'fs';
 import { join } from 'path';
 
 const INIT_EPILOG = `
-INIT is the first step when using OpenStoat. Run it once before any other command.
+Run this ONCE before using any other OpenStoat command. It is safe to run again.
 
 ## What it does
 
-1. Creates the data directory
-   Default: ~/.openstoat (override with OPENSTOAT_DATA_DIR env var)
+  1. Creates data directory:   ~/.openstoat (or OPENSTOAT_DATA_DIR)
+  2. Initializes SQLite database with tables: plans, tasks, templates, handoffs, config
+  3. Inserts default workflow template (credentials/code_review/deploy → human, rest → ai)
+  4. Optional: --project writes .openstoat.json in current directory
 
-2. Initializes SQLite database
-   Creates plans, tasks, templates, handoffs, config tables
+## Agent Quick Start
 
-3. Inserts default workflow template
-   Default Workflow distinguishes AI vs human tasks (credentials, code_review, deploy, etc.)
+  openstoat init                     # First-time setup
+  openstoat template ls              # Verify default template exists
+  openstoat plan add "Your goal..."  # Start working
 
-4. Optional: Create project config
-   With --project, writes .openstoat.json in current directory with project name
+## When to run
 
-## When to use
+  • First time using OpenStoat on this machine
+  • After changing OPENSTOAT_DATA_DIR environment variable
+  • When binding a project name to a directory (--project <name>)
 
-- First time using OpenStoat
-- After changing data directory (OPENSTOAT_DATA_DIR)
-- When binding a project name to current directory (--project)
+## Environment
 
-## Environment variables
-
-OPENSTOAT_DATA_DIR  Override default data directory path (default: ~/.openstoat)
+  OPENSTOAT_DATA_DIR   Override data directory (default: ~/.openstoat)
 `;
 
 export const initCmd = {
   command: 'init',
-  describe: 'Initialize OpenStoat: create data dir, database, default template; optionally create project config',
+  describe: 'First-time setup: create database and default template (run once before other commands)',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .option('project', {
