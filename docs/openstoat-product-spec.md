@@ -1,409 +1,398 @@
-# OpenStoat 产品方案 (v2)
+# OpenStoat Product Specification (v3)
 
-> AI ↔ Human 协作任务队列系统
-
----
-
-## 1. 产品定位
-
-**一句话描述**: 一个解耦 AI Agent 与人类协作的任务队列系统，让 AI 可以并行处理不依赖人的任务，人类完成后自动触发下游 AI 继续执行。
-
-**产品定位**:
-- 开源项目
-- 目标用户: 1 人类 + 10 AI Agents
-- 架构: Local-first + CLI-first
-- **无 LLM**: 不配置 API Key，不请求 LLM
-- **CLI 即文档**: `openstoat --help` 就是超级说明书
-
-**核心价值**:
-- 人类是瓶颈，AI 并行填满所有空闲时间
-- 任务状态透明，谁该做什么一目了然
-- 人类只需在关键节点介入，无需全程盯着
+> Agent-first AI and Human collaborative task system
 
 ---
 
-## 2. 核心概念
+## 1. Positioning
 
-| 概念 | 定义 |
-|------|------|
-| **Template** | 组织流程模板，定义哪些任务类型需要人类介入，由 Agent 读取 |
-| **Plan** | 一个项目目标，包含多个 Task，由 Agent 写入 |
-| **Task** | 最小执行单元，指定 owner (AI 或 Human)，Agent 负责规划内容 |
-| **Handoff** | 任务交接时的上下文传递 |
+**One-line description**: OpenStoat is a local-first, CLI-first task orchestration system where AI Agents are the default execution engine and humans join only when needed.
 
-> **注意**: OpenStoat 本身不进行 AI 处理，不配置 LLM。规划工作由外部 Agent 完成。
+**Product characteristics**:
+- Open-source project
+- Team model target: 1+ Humans and N Agents
+- Architecture: Local-first + CLI-first
+- No built-in LLM calls inside OpenStoat
+- CLI is the operational manual for Agents and Humans
 
----
-
-## 3. 系统架构
-
-### 3.1 整体架构
-
-```
-┌─────────────────────────────────────────────────────────┐
-│              External Agents (外部 Agent)               │
-│  OpenClaw, Claude Code, Cursor, etc.                   │
-│                                                          │
-│  • 读取 Template                                       │
-│  • 根据 Template 规划 Task                              │
-│  • 写入 Plan/Task 到 OpenStoat                         │
-│  • 监听 Human 任务完成事件                              │
-└─────────────────────────────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────┐
-│                      OpenStoat                          │
-│                                                          │
-│  ┌─────────────────────────────────────────────────┐   │
-│  │              SQLite Database                     │   │
-│  │  - Template 表                                    │   │
-│  │  - Plan 表                                        │   │
-│  │  - Task 表                                        │   │
-│  │  - Handoff 表                                     │   │
-│  └─────────────────────────────────────────────────┘   │
-│                                                          │
-│  CLI: 帮助文档 = 超级说明书                              │
-└─────────────────────────────────────────────────────────┘
-```
-
-### 3.2 OpenStoat 职责
-
-OpenStoat **不**配置 LLM，不请求 LLM，只负责：
-
-- **存储**: Template、Plan、Task、Handoff
-- **CLI**: 数据操作 + 帮助文档
-- **状态机**: 任务状态流转
-- **监听**: 等待 Human 完成任务
-
-### 3.3 Agent 职责
-
-External Agents 负责：
-
-- **读取**: Template 定义
-- **规划**: 根据 Template 拆解 Task
-- **执行**: 调用 LLM 完成任务
-- **监听**: 轮询或订阅 Human 任务完成事件
+**Core value**:
+- Agent-first throughput: maximize parallel AI execution
+- Explicit ownership and status on every task
+- Minimal management overhead for human participants
 
 ---
 
-## 4. Daemon (守护进程)
+## 2. Design Principles
 
-OpenStoat 可选启动一个守护进程，用于自动调度 AI 任务。
+1. **Agent-first**: Agent roles are first-class in planning and execution.
+2. **Task-only workflow**: there is no `plan -> task` hierarchy. The primary unit is a first-level task.
+3. **Project is mandatory context**: every task belongs to one project.
+4. **Project and template are bound**: one project owns one template context; they are treated as one operational concept.
+5. **OpenStoat stores and orchestrates**: external agents provide intelligence and execution logic.
+6. **CLI is the agent super-manual**: CLI help and examples must be written in an agent-skill style that tells agents exactly how to operate OpenStoat step by step.
 
-### 4.1 功能
+---
 
-- 每分钟轮询 `ai_ready` 状态的任务
-- 发现新任务时，触发配置的 Agent 执行
-- 支持多 Agent 并行调度
+## 3. Roles and Permissions
 
-### 4.2 配置
+OpenStoat defines four roles:
 
-```bash
-# 配置执行任务的 Agent
-$ openstoat config set agent "openclaw"        # 或 claude-code, cursor 等
-$ openstoat config set poll-interval 60       # 轮询间隔 (秒)，默认 60
+- **Agent Planner**
+- **Agent Worker**
+- **Human Planner**
+- **Human Worker**
+
+### 3.1 Planner capabilities
+
+Default insertion authority belongs to planners: `Agent Planner` and `Human Planner` can insert tasks into the OpenStoat Kanban.
+
+Exception:
+- `Agent Worker` may insert a task only in self-unblock flow, and only to create a `human_worker` task required to unblock the current task.
+
+When creating a task, the following fields are all required:
+
+- `project`
+- `title`
+- `description`
+- `acceptance_criteria`
+- `depends_on`
+- `status`
+- `owner`
+- `task_type`
+
+### 3.2 Worker capabilities
+
+`Agent Worker` and `Human Worker` claim tasks from Kanban and execute them.
+
+Workers can:
+- claim available tasks
+- update task status during execution
+- submit completion output and handoff context
+- when blocked by human input: create a human task, set dependency so the blocked task depends on it, and set own task status to `ready`
+
+Workers cannot:
+- bypass required task fields
+- execute tasks whose dependencies are unresolved
+
+---
+
+## 4. Core Concepts
+
+| Concept | Definition |
+|---|---|
+| **Project (Template-bound)** | The top-level execution scope. A project includes and binds its template context. |
+| **Task** | The first-level, minimal execution unit in Kanban. No parent plan entity exists. |
+| **Kanban** | The operational board where planners insert tasks and workers claim/execute tasks. |
+| **Handoff** | Structured context transfer between completed and downstream tasks. |
+
+> OpenStoat does not run LLM inference. It manages storage, state transitions, and coordination APIs/CLI.
+
+---
+
+## 5. System Architecture
+
 ```
-
-### 4.3 逻辑
-
-```bash
-$ openstoat daemon start
-
-# 内部逻辑 (按 poll-interval 轮询):
-while true:
-  tasks = openstoat task ls --status ai_ready --json
-  for task in tasks:
-    agent = config.get("agent")
-    exec(f"{agent} do-task --task-id {task.id}")
-    openstoat task update {task.id} --status in_progress
-  sleep(poll_interval)
-```
-
-### 4.4 流程
-
-```
-Plan 写入 → Task (ai_ready)
-              ↓
-Daemon 轮询 → 发现新任务
-              ↓
-触发 Agent 执行 → Agent 完成
-              ↓
-openstoat task done <id> → 下游任务 ai_ready
-              ↓
-Daemon 继续调度
+┌────────────────────────────────────────────────────────────┐
+│                    External Agents / Humans                │
+│                                                            │
+│  Agent Worker / Human Worker:                              │
+│  - claim and execute tasks                                  │
+│  - submit output and handoff                                 │
+│  - when blocked: create human task, set dependency, ready    │
+│                                                            │
+│  Agent Planner (on-demand):                                 │
+│  - invoked externally when planning is needed                │
+│  - creates tasks via CLI                                    │
+└────────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌────────────────────────────────────────────────────────────┐
+│                          OpenStoat                         │
+│                                                            │
+│  SQLite storage:                                           │
+│  - Project (template-bound)                                │
+│  - Task (with logs)                                         │
+│  - Handoff                                                 │
+│                                                            │
+│  Daemons:                                                  │
+│  - worker-daemon                                           │
+│                                                            │
+│  CLI + state machine + dependency checks                   │
+└────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 5. 动态人工介入
+## 6. Data Model
 
-Agent 执行过程中发现需要人工介入时，可直接升级为 Human 任务：
-
-```bash
-$ openstoat task need-human task_001 --reason "发现 API 签名方式与文档不符，需要确认"
-```
-
-状态流转：
-```
-in_progress → waiting_human → human_done → in_progress
-                ↑                              │
-                └──────────────────────────────┘
-```
-
-只需修改状态，不引入新概念，数据流最简。
-
----
-
-## 6. 数据模型
-
-### 6.1 Plan
+### 6.1 Project (template-bound)
 
 ```json
 {
-  "id": "plan_001",
-  "title": "集成 Paddle 支付",
-  "description": "在项目中集成 Paddle 作为支付 provider",
-  "status": "planned | in_progress | completed",
-  "created_at": "2026-02-25T16:00:00Z",
-  "updated_at": "2026-02-25T16:00:00Z"
+  "id": "project_checkout_rebuild",
+  "name": "Checkout Rebuild",
+  "template_context": {
+    "version": "1.0",
+    "rules": [
+      {
+        "task_type": "credentials",
+        "default_owner": "human_worker"
+      },
+      {
+        "task_type": "implementation",
+        "default_owner": "agent_worker"
+      }
+    ]
+  },
+  "status": "active | archived",
+  "created_at": "2026-02-26T10:00:00Z",
+  "updated_at": "2026-02-26T10:00:00Z"
 }
 ```
 
-### 6.2 Task
+### 6.2 Task (first-level only)
+
+`logs` is a required field for agents: agents must append to `logs` on every execution step command (`claim`, `start`, `self-unblock`, `done`). Logs record the full execution process and serve as context for other agents reading dependent tasks.
 
 ```json
 {
   "id": "task_001",
-  "plan_id": "plan_001",
-  "title": "添加 Paddle 到 PaymentProviderEnum",
-  "description": "在枚举中添加 Paddle 选项",
-  "owner": "ai",
-  "status": "pending | ai_ready | in_progress | waiting_human | human_done | done",
-  "depends_on": [],
-  "output": null,
-  "created_at": "2026-02-25T16:00:00Z",
-  "updated_at": "2026-02-25T16:00:00Z"
-}
-```
-
-### 6.3 Template (组织流程模板)
-
-```json
-{
-  "id": "template_001",
-  "name": "Default Workflow",
-  "version": "1.0",
-  "rules": [
-    {
-      "task_type": "credentials",
-      "requires_human": true,
-      "human_action": "provide_input",
-      "prompt": "请提供 {field} 的值"
-    },
-    {
-      "task_type": "code_review",
-      "requires_human": true,
-      "human_action": "approve",
-      "prompt": "请审核以下代码变更"
-    },
-    {
-      "task_type": "deploy",
-      "requires_human": true,
-      "human_action": "confirm",
-      "prompt": "确认部署到 {environment}？"
-    },
-    {
-      "task_type": "implementation",
-      "requires_human": false
-    },
-    {
-      "task_type": "testing",
-      "requires_human": false
-    }
+  "project": "project_checkout_rebuild",
+  "title": "Add provider mapping for Paddle",
+  "description": "Implement provider mapping in payment module and update integration tests.",
+  "acceptance_criteria": [
+    "Mapping supports Paddle in all checkout paths",
+    "Unit tests and integration tests pass"
   ],
-  "keywords": {
-    "credentials": ["api_key", "secret", "key", "凭证", "密钥", "password"],
-    "code_review": ["review", "审核", "pr", "code review"],
-    "deploy": ["deploy", "部署", "release", "发布"]
-  }
+  "depends_on": [],
+  "status": "ready | in_progress | done",
+  "owner": "agent_worker | human_worker",
+  "task_type": "implementation | testing | review | credentials | deploy | docs | custom",
+  "output": null,
+  "logs": [],
+  "created_by": "agent_planner",
+  "claimed_by": null,
+  "created_at": "2026-02-26T10:10:00Z",
+  "updated_at": "2026-02-26T10:10:00Z"
 }
 ```
 
-### 6.4 Handoff (交接记录)
+### 6.3 Handoff
+
+Handoff is required for all task completions. Handoff is a text summary only. When a task has no downstream tasks, `to_task_id` is `null` (audit-only handoff).
 
 ```json
 {
   "id": "handoff_001",
   "from_task_id": "task_001",
   "to_task_id": "task_002",
-  "summary": "已完成 Paddle 枚举添加，创建了 src/enums/PaymentProvider.ts",
-  "artifacts": [
-    {
-      "type": "file",
-      "path": "src/enums/PaymentProvider.ts",
-      "action": "created"
-    }
-  ],
-  "created_at": "2026-02-25T16:30:00Z"
+  "summary": "Provider mapping is complete. Reuse src/payments/provider-map.ts. Main changes are in payment module and integration tests.",
+  "created_at": "2026-02-26T11:00:00Z"
 }
 ```
 
 ---
 
-## 7. 核心流程
+## 7. Kanban Operating Rules
 
-### 7.1 Plan 提交与 Task 拆分
+### 7.1 Task insertion
+
+`Agent Planner`, `Human Planner`, and `Agent Worker` (when self-unblocking) can insert tasks.
+
+Validation rules:
+- reject insert if any required field is missing
+- reject insert if `project` does not exist
+- reject insert if `depends_on` references unknown task IDs
+- reject insert if `owner`, `task_type`, or `status` is outside allowed enums
+
+### 7.2 Task claiming and execution
+
+Only `Agent Worker` and `Human Worker` can claim tasks.
+
+Claim rules:
+- task must be in state `ready` (ready = in queue; claimable only when dependencies are satisfied)
+- task dependencies must be satisfied
+- owner compatibility must match claimer role (`agent_worker` or `human_worker`)
+- agent must append to `logs` when claiming and on every subsequent step command
+
+### 7.3 Completion and triggering
+
+When a worker marks a task `done`:
+- handoff is required for all tasks, including `human_worker` tasks (when no downstream tasks exist, `to_task_id` is `null`)
+- output and handoff must be attached together
+- agent must append to `logs` on completion
+- downstream tasks are re-evaluated
+- tasks with all dependencies satisfied can move to `ready`
+
+Handoff quality requirement:
+- `handoff.summary` must be at least 200 characters
+- handoff should include complete execution context and decisions whenever available
+
+### 7.4 Worker self-unblock (when blocked by human)
+
+When an `agent_worker` task gets stuck due to missing human input, the worker may self-unblock:
+
+1. create a `human_worker` task (via `openstoat task create` with `owner=human_worker`)
+2. set dependency so the blocked task `depends_on` the new human task
+3. run dedicated rollback command to move blocked task from `in_progress` to `ready`
+4. append to `logs` (e.g. "Blocked: need X. Created task H for human.")
+
+The agent keeps task status as `ready` (no new status). The task becomes claimable again after the human task is done.
+
+Guard rule for self-unblock rollback:
+- `in_progress -> ready` is allowed only for self-unblock
+- rollback must be executed through dedicated CLI command `openstoat task self-unblock`
+- no generic status-transition command (such as `task update --status ...`) exists in this model
+- the self-unblock command must include at least one newly added `depends_on` task ID
+- rollback without a new dependency must be rejected
+
+### 7.5 Duplicate-planning prevention (current-scope policy)
+
+For this release, duplicate prevention is enforced as a planner workflow rule, not a database key constraint.
+
+Required behavior for `agent_planner` before creating a task:
+1. list unfinished tasks in the same project (`ready`, `in_progress`)
+2. compare candidate task intent with existing unfinished tasks
+3. if an equivalent unfinished task exists, do not create a new task
+4. reuse the existing task ID in planner output
+
+Policy notes:
+- this policy is mandatory for planner behavior in the local version
+- no online LLM duplicate-judgment service is included in current scope
+- no database-level deduplication key is required in current scope
+
+---
+
+## 8. State Machine
 
 ```
-1. Human 提交 Plan (文本格式)
-         ↓
-2. Task Splitter 解析
-   - 识别任务边界
-   - 识别任务类型
-         ↓
-3. Template Matcher 匹配规则
-   - 根据关键词匹配 task_type
-   - 应用 template rules 标记 owner
-         ↓
-4. 生成扁平 Task 列表
-   - 建立依赖关系 (DAG)
-   - 计算可并行任务
-         ↓
-5. AI 任务直接进入 ai_ready，Human 任务进入 pending
+[ready] -> [in_progress] -> [done]
+               | 
+               +-> [ready]  (self-unblock only, requires newly added depends_on)
 ```
 
-### 7.2 执行流程
+State intent:
+- `ready`: task is in the queue; claimable by workers only when dependencies are satisfied
+- `in_progress`: currently being executed
+- `done`: accepted as complete
+
+Status policy:
+- `waiting_human` is not a valid status in this model
+- `todo`, `ai_ready`, `blocked`, and `review` are not valid status values
+- human involvement is represented by creating a dedicated human-owned task with explicit dependency links
+- `in_progress -> ready` is a valid rollback only in self-unblock flow and only when a new dependency is added in the same update
+
+---
+
+## 9. Example Workflow
 
 ```
-Task 状态机:
-[pending] → [ai_ready] → [in_progress] → [waiting_human] → [human_done] → [done]
-                ↑              │                │               │
-                └──────────────┴────────────────┴───────────────┘
-
-执行逻辑:
-- AI: 拉取 status=ai_ready 的任务，并行执行
-- AI 任务完成 → 写 handoff → 检查下游任务，如依赖满足则触发
-- Human 任务完成 → 触发下游 AI 任务 (带 handoff)
+1) Agent Planner creates Task A (owner=agent_worker, status=ready)
+2) Agent Worker claims Task A and completes it
+3) Human Planner creates Task B (depends_on=A, owner=human_worker)
+4) Human Worker claims Task B when A is done
+5) Task B done -> Task C becomes ready automatically
 ```
 
-### 7.3 依赖触发示例
+No plan object is created in any step. All orchestration happens at task level inside one project scope.
 
+Worker self-unblock variant:
 ```
-Task A (AI) ──依赖──→ Task B (Human) ──依赖──→ Task C (AI)
-                                              ↑
-                                         自动触发，
-                                         携带 Task B 的 output
+1) Agent Worker runs Task X and gets stuck on missing human input
+2) Agent Worker creates Human Task H (owner=human_worker)
+3) Agent Worker runs self-unblock command for Task X with newly added depends_on H
+4) Human Worker completes H with mandatory handoff
+5) Task X becomes claimable again; Agent Worker resumes
 ```
 
 ---
 
-## 8. 团队模型
+## 10. CLI Direction (Draft)
 
-**实际结构**: 1 人类 + N 个 AI Agents
-
-- **AI Agents**: 10+ 并行工作，7×24 小时
-- **Human**: 唯一的瓶颈，所有需要人类的任务都在排队等
-
-```
-时间线示例:
-
-Day 1, 10:00
-├── AI-1: Task A (implement) ████████░░ done
-├── AI-2: Task B (implement) ████░░░░░░ done  
-├── AI-3: Task C (implement) ██████████ done
-└── Human: Task D (credentials) ⏸ 等 AI 完成
-
-Day 1, 10:30
-└── Human: Task D 完成 → AI-1 自动开始 Task E
-
-Day 1, 11:00
-├── AI-1: Task E ██████░░░░ in_progress
-├── AI-2: Task F ████░░░░░░ in_progress
-└── Human: Task G (review) ⏸ 等 E, F 完成
-```
-
----
-
-## 9. 存储与项目
-
-### 9.1 存储位置
-
-- 数据目录: `~/.openstoat/`
-- 存储格式: SQLite
-- 无需账号，无需 API Key
-
-### 9.2 项目支持
-
-- 支持多项目区分
-- 每个项目可有独立 Template
-- 项目配置随代码仓库（或独立管理）
-
-### 9.3 CLI 设计
+CLI format conventions (agent-friendly):
+- `--acceptance-criteria`: pass multiple times for array; each occurrence maps to one element
+- `--depends-on`: pass multiple times for array; omit when task has no dependencies
+- `--logs-append`: agent must append to task logs on every step command; logs serve as context for other agents
+- `--id` on project init: required; use this exact value as `--project` when creating tasks
+- `--template` on project init: required; project-template binding is explicit in CLI (there is no `--template-file`)
+- explicit step commands are required for status transitions; there is no generic `openstoat task update --status ...` command
+- `openstoat task self-unblock`: dedicated rollback command for `in_progress -> ready`; must include at least one new `--depends-on`
 
 ```bash
-# 初始化项目
-$ openstoat init --project my-project
+# initialize a project with bound template context
+# agent must specify --id and --template explicitly; use this id when creating tasks
+openstoat project init --id project_checkout_rebuild --name "Checkout Rebuild" --template checkout-default-v1
 
-# 提交计划
-$ openstoat plan add "集成 Paddle 支付
-1. 添加枚举
-2. 提供 API Key
-3. 实现服务"
+# planner inserts a task (all required fields provided)
+# planner must read unfinished tasks first to avoid duplicates
+openstoat task ls --project project_checkout_rebuild --status ready,in_progress
 
-# 查看任务
-$ openstoat task ls
+# create only when no equivalent unfinished task exists
+# use repeated --acceptance-criteria for multiple criteria; repeated --depends-on for dependencies
+# omit --depends-on when task has no dependencies
+openstoat task create \
+  --project project_checkout_rebuild \
+  --title "Add provider mapping for Paddle" \
+  --description "Implement mapping in payment module" \
+  --acceptance-criteria "Mapping works in checkout paths" \
+  --acceptance-criteria "Unit tests pass" \
+  --status ready \
+  --owner agent_worker \
+  --task-type implementation
 
-# 人类完成某任务
-$ openstoat task done task_002
+# task with dependencies: add --depends-on for each dependency
+# openstoat task create ... --depends-on task_001 --depends-on task_002 ...
 
-# 查看计划/任务状态
-$ openstoat plan status <plan_id>
-$ openstoat task ls --status waiting_human
+# worker claims and starts a task (agent must append to logs on each step command)
+openstoat task claim task_001 --as agent_worker --logs-append "Claimed, starting work"
+openstoat task start task_001 --as agent_worker --logs-append "Started implementation work"
+
+# if AI gets stuck: create human task, set dependency, set own task to ready
+openstoat task create --project project_checkout_rebuild --title "Provide Paddle API key" \
+  --description "Unblock payment integration" --acceptance-criteria "Key delivered securely" \
+  --status ready --owner human_worker --task-type credentials
+
+# rollback must use dedicated self-unblock command
+openstoat task self-unblock task_001 \
+  --depends-on task_002 \
+  --logs-append "Blocked: need API key. Created task_002 for human."
+
+# worker completes task
+# handoff is mandatory; agent must append to logs
+openstoat task done task_001 \
+  --output "Implemented and tested" \
+  --handoff-summary "Implemented provider mapping for Paddle in checkout and recurring billing paths, added integration coverage, and validated compatibility with existing provider selection logic. Main changes are in src/payments/provider-map.ts and tests/integration/provider-map.spec.ts. No migration needed." \
+  --logs-append "Completed implementation and tests"
 ```
 
 ---
 
-## 10. 审核不通过流程
-
-代码审核发现问题时，可打回修改：
-
-```
-Task E (审核): Human 标记 "需要修改"
-        │
-        ▼
-系统创建 Task E-1: 修复审核问题 (AI)，依赖 Task E
-        │
-        ▼
-AI 修复 → openstoat task done E-1 → 重新进入 Task E 等待审核
-```
-
-只需新增一个修复任务，不引入新状态，保持状态机简洁。
-
----
-
-## 11. 实现阶段
+## 11. Milestones
 
 ### Phase 1: MVP
 
-- [ ] Plan 解析与 Task 拆分
-- [ ] 基本 Template 匹配 (关键词)
-- [ ] Task 状态机
-- [ ] CLI 基本操作
-- [ ] 简单的 Handoff
+- [ ] Project model (template-bound)
+- [ ] Task model with required fields (including logs)
+- [ ] Kanban insertion and claim flows by role
+- [ ] Dependency validation and status machine
+- [ ] Basic handoff support
+- [ ] Worker self-unblock (create human task, set dependency, ready)
+- [ ] Worker-daemon baseline loop
+- [ ] On-demand planning (external LLM trigger)
 
-### Phase 2: 增强
+### Phase 2: Scale
 
-- [ ] 依赖图计算
-- [ ] 多 AI 并行调度
-- [ ] 记忆传承
-- [ ] Web UI
+- [ ] Parallel worker coordination
+- [ ] Better task filtering and prioritization
+- [ ] Audit trail for role actions
+- [ ] Web UI on top of CLI and storage
 
-### Phase 3: 高级
+### Phase 3: Advanced
 
-- [ ] 自定义模板 UI
-- [ ] 审计日志
-- [ ] Webhook 通知
+- [ ] Policy-driven automation for planners/workers
+- [ ] Notification and webhook integration
+- [ ] Advanced project template evolution
 
 ---
 
-*Updated: 2026-02-25*
+*Updated: 2026-02-26*
