@@ -1,265 +1,265 @@
-# OpenStoat 用例方案 (v2)
+# OpenStoat Use Cases (v3)
 
-> 场景 → 流程 → 产出
-
----
-
-## 产品前提
-
-- **存储**: `~/.openstoat/` (SQLite)
-- **无需账号/API Key**
-- **支持多项目**，每个项目独立模板
-- **无 LLM**: OpenStoat 不配置 LLM，规划由外部 Agent 完成
-- **CLI 即文档**: `openstoat --help` 是完整说明书
+> Scenario → Flow → Outcome
 
 ---
 
-## 核心团队模型
+## Product Context
 
-```
-1 人类 (全能开发) + N 个 AI Agents (7×24 并行工作)
-```
-
----
-
-## 用例 1: 单人开发 (你的场景)
-
-### 场景
-你是唯一的，人类。AI 帮你干活，你只需要在关键时刻提供输入。
-
-### 输入 (Plan)
-
-```
-集成 Paddle 支付
-1. 添加 Paddle 到枚举
-2. 提供 Paddle API Key
-3. 实现 PaddlePaymentService
-4. 写单元测试
-5. 代码审核
-6. 部署到 staging
-```
-
-### 系统处理后
-
-| Task | Owner | 类型 |
-|------|-------|------|
-| 1 | AI | implementation |
-| 2 | Human | credentials |
-| 3 | AI | implementation |
-| 4 | AI | testing |
-| 5 | Human | code_review |
-| 6 | Human | deploy |
-
-### 执行过程
-
-```
-10:00 系统收到 Plan
-├── Task 1 (AI) 开始执行 ████ done
-├── Task 3 (AI) 开始执行 ████ done  
-├── Task 4 (AI) 开始执行 ████ done
-└── Task 2 (Human) 进入等待 ⏸ 需要你
-
-10:30 你收到通知: "需要提供 Paddle API Key"
-├── 你输入 API Key
-└── Task 2 done → Task 3 已完成 → Task 5 进入等待
-
-11:00 你收到: "代码审核待处理"
-├── 你审核代码 → 批准
-└── Task 5 done → Task 6 进入等待
-
-11:15 你部署 staging → 完成 ✅
-```
-
-### 感受
-
-- AI 在后台 7×24 干活
-- 你该干嘛干嘛，不用守着
-- 真正需要你时通知你
-- 完成后自动继续，不用你记得"告诉 AI 继续"
+- **Storage**: `~/.openstoat/` (SQLite)
+- **No account/API Key** required
+- **Project is mandatory**: every task belongs to one project; project and template are bound
+- **No built-in LLM**: OpenStoat orchestrates; external agents provide intelligence
+- **CLI is the agent manual**: `openstoat --help` is the operational guide for both agents and humans
 
 ---
 
-## 用例 2: 多 AI 并行
-
-### 场景
-你有 10 个 AI Agent 并行工作，同一个 Plan 里的任务能并行的都并行。
-
-### Plan
+## Core Team Model
 
 ```
-重构用户系统
-1. 创建 User 模型 (AI)
-2. 创建 Auth 服务 (AI)
-3. 创建 API 路由 (AI)
-4. 写单元测试 (AI)
-5. 提供测试账号 (Human)
-6. 代码审核 (Human)
-7. 部署 (Human)
-```
-
-### 并行执行
-
-```
-时间线:
-
-10:00
-├── AI-1: Task 1 ████████ done
-├── AI-2: Task 2 ████████ done
-├── AI-3: Task 3 ████░░░░ in_progress
-├── AI-4: Task 4 ████░░░░ in_progress
-└── 等待: Task 5, 6, 7
-
-10:30
-├── AI-3: Task 3 done
-├── AI-4: Task 4 done
-└── Task 5 (Human) 可执行 ⏸ 等你
-
-11:00 你提供测试账号
-└── Task 5 done → Task 6 可执行
-
-11:30 你审核代码
-└── Task 6 done → Task 7 可执行
-
-12:00 你部署 → 完成 ✅
+1+ Humans + N Agents
+Roles: Agent Planner | Agent Worker | Human Planner | Human Worker
 ```
 
 ---
 
-## 用例 3: 复杂依赖
+## Use Case 1: Agent Planner Creates Tasks, Agent Worker Executes
 
-### 场景
-任务有依赖关系，系统自动计算哪些可以并行。
+### Scenario
 
-### Plan
+An external Agent Planner is invoked when planning is needed. It creates tasks via CLI. Agent Workers claim and execute them in parallel.
 
-```
-支付系统
-- Task A: 调研方案 (AI)
-- Task B: 提供商户号 (Human) ← 依赖 A
-- Task C: 实现服务 (AI) ← 依赖 B
-- Task D: 写测试 (AI) ← 依赖 C
-- Task E: 审核 (Human) ← 依赖 C, D
-- Task F: 部署 (Human) ← 依赖 E
-```
-
-### 执行图
+### Flow
 
 ```
-Task A (调研) ████ done
-        │
-        ▼
-Task B (商户号) ⏸ waiting_human ← 你提供
-        │
-        ▼
-Task C (服务)   🔄 in_progress
-Task D (测试)   🔄 in_progress ← 可并行
-        │
-        ▼
-Task E (审核)   ⏸ waiting_human ← 你审核
-        │
-        ▼
-Task F (部署)   ⏸ waiting_human ← 你部署
+1) Agent Planner lists unfinished tasks to avoid duplicates
+   openstoat task ls --project project_checkout_rebuild --status ready,in_progress
+
+2) Agent Planner creates Task A (owner=agent_worker, status=ready)
+   openstoat task create --project project_checkout_rebuild \
+     --title "Add provider mapping for Paddle" \
+     --description "Implement mapping in payment module" \
+     --acceptance-criteria "Mapping works in checkout paths" \
+     --acceptance-criteria "Unit tests pass" \
+     --status ready --owner agent_worker --task-type implementation
+
+3) Agent Worker claims and executes Task A
+   openstoat task claim task_001 --as agent_worker --logs-append "Claimed, starting work"
+   openstoat task start task_001 --as agent_worker --logs-append "Started implementation"
+   openstoat task done task_001 --output "Implemented and tested" \
+     --handoff-summary "Implemented provider mapping for Paddle in checkout and recurring billing paths..." \
+     --logs-append "Completed implementation and tests"
+
+4) Downstream tasks (if any) become ready when dependencies are satisfied
 ```
+
+### Outcome
+
+- Tasks flow from planner to workers without a plan object
+- Agent Worker appends to `logs` on every step; logs serve as context for dependent tasks
+- Handoff (min 200 chars) transfers execution context to downstream tasks
 
 ---
 
-## 用例 4: 审核不通过
+## Use Case 2: Human Planner Inserts Human-Owned Tasks
 
-### 场景
-代码审核发现问题，需要打回修改。
+### Scenario
 
-### 流程
+A Human Planner creates a task that requires human execution (e.g. credentials, review, deploy). The task is inserted with `owner=human_worker` and appropriate dependencies.
+
+### Flow
 
 ```
-Task E (审核): Human 标记 "需要修改"
-        │
-        ▼
-系统创建 Task E-1: 修复审核问题 (AI)
-        │
-        ▼
-AI 修复 → openstoat task done E-1 → 重新进入 Task E 等待审核
+1) Agent Planner creates Task A (owner=agent_worker) and Task C (owner=agent_worker, depends_on=A)
+2) Human Planner creates Task B (owner=human_worker, depends_on=A)
+   - Task B: "Provide Paddle API key" (task_type=credentials)
+   - Task B blocks Task C until human delivers the key
+
+3) Agent Worker completes Task A
+4) Task B becomes claimable (dependencies satisfied)
+5) Human Worker claims Task B, provides API key, marks done with handoff
+6) Task C becomes claimable; Agent Worker resumes
 ```
+
+### Outcome
+
+- Human involvement is explicit: dedicated tasks with `owner=human_worker`
+- No `waiting_human` status; human tasks sit in Kanban until claimed
+- Dependency chain enforces order: C waits for B, B waits for A
 
 ---
 
-## 用例 5: 自定义模板
+## Use Case 3: Worker Self-Unblock (Agent Blocked by Human Input)
 
-### 场景
-不同项目有不同流程，你想自定义模板。
+### Scenario
 
-### 模板示例
+An Agent Worker is executing Task X and gets stuck because it needs human input (e.g. API key, approval). The agent self-unblocks by creating a human task and rolling back.
 
-```json
-{
-  "name": "我的流程",
-  "rules": [
-    {"task_type": "implementation", "requires_human": false},
-    {"task_type": "credentials", "requires_human": true},
-    {"task_type": "code_review", "requires_human": true},
-    {"task_type": "deploy", "requires_human": true}
-  ]
-}
+### Flow
+
+```
+1) Agent Worker claims Task X and starts work
+2) Agent Worker discovers: "Need Paddle API key to proceed"
+3) Agent Worker creates Human Task H (owner=human_worker, task_type=credentials)
+   openstoat task create --project project_checkout_rebuild \
+     --title "Provide Paddle API key" \
+     --description "Unblock payment integration" \
+     --acceptance-criteria "Key delivered securely" \
+     --status ready --owner human_worker --task-type credentials
+
+4) Agent Worker runs self-unblock (dedicated command, not generic status update)
+   openstoat task self-unblock task_X --depends-on task_H \
+     --logs-append "Blocked: need API key. Created task_H for human."
+
+5) Task X moves from in_progress → ready; Task X now depends_on H
+6) Human Worker completes H with mandatory handoff
+7) Task X becomes claimable again; Agent Worker can resume
 ```
 
-### 匹配效果
+### Outcome
 
-| 任务描述 | 识别为 | Owner |
-|----------|--------|-------|
-| "实现登录API" | implementation | AI |
-| "提供 API Key" | credentials | Human |
-| "代码审核" | code_review | Human |
-| "部署到 prod" | deploy | Human |
+- Agent does not stay stuck; it explicitly hands off to human
+- Rollback is allowed only via `openstoat task self-unblock` with at least one new `--depends-on`
+- No generic `task update --status ready`; self-unblock is the only in_progress→ready path
 
 ---
 
-## 用例 6: 记忆传承
+## Use Case 4: Parallel Execution with Dependencies
 
-### 场景
-Task C 依赖 Task B (你提供的 API Key)，AI 做 Task C 时需要知道 Key 是什么。
+### Scenario
 
-### Handoff
+Multiple Agent Workers run in parallel. Tasks with satisfied dependencies are claimable; the system enforces dependency order.
 
-```json
-{
-  "id": "handoff_001",
-  "from_task_id": "task_002",
-  "to_task_id": "task_003",
-  "summary": "Task B 已提供 API Key，使用 sandbox 环境",
-  "artifacts": [
-    {
-      "type": "credentials",
-      "api_key": "pdl_xxx_xxx",
-      "environment": "sandbox"
-    }
-  ],
-  "created_at": "2026-02-25T16:30:00Z"
-}
-```
-
-### AI 收到
+### Flow
 
 ```
-你正在执行 Task C: 实现支付服务
+Project: Checkout Rebuild
 
-前置任务 Task B 已完成:
-- API Key: pdl_xxx_xxx (已配置)
-- 环境: sandbox
+Task A (implementation)     → no deps, ready
+Task B (implementation)    → no deps, ready
+Task C (testing)           → depends_on A, B
+Task D (review)            → depends_on C, owner=human_worker
+Task E (deploy)            → depends_on D, owner=human_worker
 
-请继续实现 PaymentService。
+Timeline:
+- AI-1 claims A, AI-2 claims B → both in_progress
+- A done, B done → C becomes ready
+- AI-3 claims C → in_progress
+- C done → D becomes ready
+- Human claims D (review) → done
+- Human claims E (deploy) → done
 ```
+
+### Outcome
+
+- Parallelism is maximized where dependencies allow
+- `ready` means "in queue"; claimable only when all `depends_on` are done
+- Template rules (e.g. default_owner per task_type) guide who claims what
 
 ---
 
-## 总结
+## Use Case 5: Handoff and Context Transfer
 
-| 价值点 | 描述 |
-|--------|------|
-| **扁平化** | Plan → Task，二级就够 |
-| **并行** | 10+ AI 同时工作，7×24 |
-| **透明** | 状态一目了然，等谁 |
-| **自动触发** | 你完成后 AI 自动继续 |
-| **记忆** | 上下文自动传承 |
+### Scenario
+
+Task C depends on Task B. When B is done, its handoff provides context for C. Handoff is required for all completions.
+
+### Flow
+
+```
+Task B (Human Worker): "Provide Paddle API key"
+- Human completes B with handoff:
+  "API key delivered via secure channel. Use sandbox environment (pdl_sandbox_xxx).
+   Key is configured in .env as PADDLE_API_KEY. Integration tests expect sandbox mode."
+
+Task C (Agent Worker): "Implement PaddlePaymentService"
+- Agent claims C, reads B's handoff and B's logs
+- Handoff + logs = full execution context for C
+```
+
+### Handoff Rules
+
+- Required for every task completion (including human_worker tasks)
+- When no downstream tasks exist, `to_task_id` is `null` (audit-only handoff)
+- `handoff.summary` must be at least 200 characters
+- Summary is text only; no structured artifacts in handoff
+
+### Outcome
+
+- Downstream agents get execution context via handoff and logs
+- No credentials in handoff body; human describes where/how they were delivered
 
 ---
 
-*Updated: 2026-02-25*
+## Use Case 6: Project and Template Binding
+
+### Scenario
+
+A project is initialized with a bound template. The template defines default owners and rules per task type. All tasks in the project use this context.
+
+### Flow
+
+```
+1) Initialize project with template
+   openstoat project init --id project_checkout_rebuild \
+     --name "Checkout Rebuild" \
+     --template checkout-default-v1
+
+2) Template context (e.g. checkout-default-v1):
+   - task_type=credentials → default_owner=human_worker
+   - task_type=implementation → default_owner=agent_worker
+   - task_type=review → default_owner=human_worker
+
+3) Planner creates tasks; owner can follow template defaults or override
+4) Workers claim tasks; owner compatibility must match claimer role
+```
+
+### Outcome
+
+- Project and template are one operational concept
+- Template guides who does what; planner can override when needed
+- Every task has `project`; every project has one template
+
+---
+
+## Use Case 7: Duplicate Prevention (Planner Workflow)
+
+### Scenario
+
+Before creating a task, Agent Planner must check for equivalent unfinished tasks in the same project to avoid duplicates.
+
+### Flow
+
+```
+1) Agent Planner intends to create: "Add provider mapping for Paddle"
+2) Planner lists unfinished tasks first
+   openstoat task ls --project project_checkout_rebuild --status ready,in_progress
+
+3) Planner compares candidate intent with existing tasks
+4) If equivalent unfinished task exists → do not create; reuse existing task ID in output
+5) If no equivalent → create new task
+```
+
+### Outcome
+
+- Duplicate prevention is a planner workflow rule, not a DB constraint
+- No online LLM duplicate-judgment service in current scope
+- Mandatory for planner behavior in local version
+
+---
+
+## Summary
+
+| Value | Description |
+|-------|-------------|
+| **Agent-first** | Agents are first-class; planners insert, workers execute |
+| **Task-only** | No plan hierarchy; tasks are the primary unit |
+| **Explicit ownership** | Every task has owner (agent_worker or human_worker) and status |
+| **Self-unblock** | Agent creates human task when blocked; dedicated rollback command |
+| **Handoff** | Required for all completions; context transfer via summary + logs |
+| **Project-bound** | Every task belongs to one project; project binds template |
+| **CLI as manual** | Agent-friendly CLI; step commands, no generic status override |
+
+---
+
+*Updated: 2026-02-26*

@@ -1,58 +1,57 @@
-# OpenStoat 架构设计
+# OpenStoat Architecture (v3)
 
-> AI ↔ Human 协作任务队列系统
+> Agent-first AI and Human collaborative task orchestration system
 
 ---
 
-## 1. 技术栈
+## 1. Tech Stack
 
-| 组件 | 技术 |
-|------|------|
-| 运行时 | Node.js 22+ |
-| 语言 | TypeScript |
-| 包管理 | Bun (workspace) |
-| 存储 | SQLite (native) |
+| Component | Technology |
+|-----------|------------|
+| Runtime | Node.js 22+ |
+| Language | TypeScript |
+| Package manager | Bun (workspace) |
+| Storage | SQLite (native) |
 | CLI | Ink / yargs |
 
 ---
 
-## 2. 项目结构 (Monorepo)
+## 2. Project Structure (Monorepo)
 
 ```
 openstoat/
 ├── packages/
-│   ├── openstoat-cli/          # 主 CLI 入口
+│   ├── openstoat-cli/          # Main CLI entry
 │   │   ├── bin/
-│   │   │   └── openstoat       # CLI 可执行文件
+│   │   │   └── openstoat       # CLI executable
 │   │   ├── src/
-│   │   │   ├── index.ts        # CLI 入口
-│   │   │   ├── commands/       # 子命令
-│   │   │   └── lib/            # 工具函数
+│   │   │   ├── index.ts        # CLI entry
+│   │   │   ├── commands/       # Subcommands (project, task, daemon)
+│   │   │   └── lib/            # Utilities
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   ├── openstoat-core/         # 核心逻辑 (存储、状态机)
+│   ├── openstoat-core/         # Core logic (storage, state machine)
 │   │   ├── src/
-│   │   │   ├── db.ts           # SQLite 连接
-│   │   │   ├── plan.ts         # Plan 模型
-│   │   │   ├── task.ts         # Task 模型
-│   │   │   ├── template.ts     # Template 模型
-│   │   │   ├── handoff.ts      # Handoff 模型
-│   │   │   └── index.ts        # 导出
+│   │   │   ├── db.ts           # SQLite connection
+│   │   │   ├── project.ts      # Project model (template-bound)
+│   │   │   ├── task.ts         # Task model
+│   │   │   ├── handoff.ts      # Handoff model
+│   │   │   └── index.ts        # Exports
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   ├── openstoat-daemon/       # 守护进程
+│   ├── openstoat-daemon/       # Worker daemon
 │   │   ├── src/
-│   │   │   ├── index.ts        # Daemon 入口
-│   │   │   ├── scheduler.ts    # 调度逻辑
-│   │   │   └── agent.ts        # Agent 调用
+│   │   │   ├── index.ts        # Daemon entry
+│   │   │   ├── scheduler.ts    # Poll and dispatch logic
+│   │   │   └── worker.ts       # Worker coordination
 │   │   ├── package.json
 │   │   └── tsconfig.json
 │   │
-│   └── openstoat-types/        # 共享类型
+│   └── openstoat-types/       # Shared types
 │       ├── src/
-│       │   └── index.ts        # TypeScript 类型定义
+│       │   └── index.ts        # TypeScript type definitions
 │       ├── package.json
 │       └── tsconfig.json
 │
@@ -63,267 +62,274 @@ openstoat/
 
 ---
 
-## 3. 架构图
+## 3. Architecture Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                     openstoat CLI                               │
-│                    (单一入口命令)                                │
-│                                                                 │
-│   $ openstoat --help                                           │
-│   $ openstoat plan add "..."                                   │
-│   $ openstoat task ls                                          │
-│   $ openstoat daemon start                                     │
-│   $ openstoat config set agent openclaw                        │
-└──────────────────────┬──────────────────────────────────────────┘
-                       │
-       ┌───────────────┼───────────────┐
-       ▼               ▼               ▼
-┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-│  plan add   │ │  task ls    │ │  daemon     │
-│  plan ls    │ │  task show  │ │  daemon     │
-│  plan rm    │ │  task done  │ │  start      │
-│             │ │  need-human │ │  stop       │
-└──────┬──────┘ └──────┬──────┘ └──────┬──────┘
-       │               │               │
-       └───────────────┼───────────────┘
-                       ▼
+│                    External Agents / Humans                      │
+│                                                                  │
+│  Agent Planner (on-demand):                                      │
+│  - openstoat task ls --project X --status ready,in_progress      │
+│  - openstoat task create --project X ...                         │
+│                                                                  │
+│  Agent Worker / Human Worker:                                    │
+│  - openstoat task claim <id> --as agent_worker --logs-append "..." │
+│  - openstoat task start <id> --as agent_worker --logs-append "..." │
+│  - openstoat task done <id> --output "..." --handoff-summary "..." │
+│  - openstoat task self-unblock <id> --depends-on <human_task>    │
+└──────────────────────────────────┬──────────────────────────────┘
+                                   │
+                                   ▼
 ┌─────────────────────────────────────────────────────────────────┐
-│                    openstoat-core                               │
-│                                                                 │
-│   ┌─────────────────────────────────────────────────────────┐  │
-│   │                    SQLite Database                      │  │
-│   │                                                          │  │
-│   │   ┌─────────┐  ┌─────────┐  ┌─────────┐  ┌──────────┐  │  │
-│   │   │ plans   │  │ tasks   │  │templates│  │ handoffs │  │  │
-│   │   └─────────┘  └─────────┘  └─────────┘  └──────────┘  │  │
-│   │                                                          │  │
-│   └─────────────────────────────────────────────────────────┘  │
-│                                                                 │
-│   Data: ~/.openstoat/openstoat.db                              │
+│                        openstoat CLI                             │
+│                    (Agent super-manual)                          │
+│                                                                  │
+│   $ openstoat --help                                             │
+│   $ openstoat project init --id X --name "..." --template Y      │
+│   $ openstoat task ls --project X --status ready,in_progress     │
+│   $ openstoat task create --project X --title "..." ...          │
+│   $ openstoat task claim <id> --as agent_worker --logs-append "..." │
+│   $ openstoat task start <id> --as agent_worker --logs-append "..." │
+│   $ openstoat task done <id> --output "..." --handoff-summary "..." │
+│   $ openstoat task self-unblock <id> --depends-on <id> --logs-append "..." │
+│   $ openstoat daemon start                                       │
+└──────────────────────────────────┬──────────────────────────────┘
+                                   │
+                                   ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                       openstoat-core                             │
+│                                                                  │
+│   ┌───────────────────────────────────────────────────────────┐  │
+│   │                    SQLite Database                         │  │
+│   │                                                            │  │
+│   │   ┌──────────┐  ┌──────────┐  ┌──────────┐               │  │
+│   │   │ projects │  │  tasks   │  │ handoffs │               │  │
+│   │   └──────────┘  └──────────┘  └──────────┘               │  │
+│   │                                                            │  │
+│   │   Project = template-bound; no standalone plans/templates │  │
+│   └───────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│   Data: ~/.openstoat/openstoat.db                                │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 4. CLI 命令文档
+## 4. CLI Command Reference
 
-### 4.1 全局命令
+### 4.1 Global
 
 ```bash
-# 查看帮助 (超级说明书)
+# Help (agent super-manual)
 $ openstoat --help
-
-# 初始化
-$ openstoat init                    # 初始化项目配置
-$ openstoat init --project my-proj  # 指定项目名
-
-# 配置
-$ openstoat config show             # 显示配置
-$ openstoat config set agent "openclaw"
-$ openstoat config set poll-interval 60
 ```
 
-### 4.2 Plan 命令
+### 4.2 Project Commands
 
 ```bash
-# Plan 管理
-$ openstoat plan add "计划内容"           # 添加计划
-$ openstoat plan ls                       # 列出计划
-$ openstoat plan show <plan_id>           # 查看计划详情
-$ openstoat plan rm <plan_id>             # 删除计划
-$ openstoat plan status <plan_id>         # 查看计划状态
+# Initialize project with bound template (required: --id, --name, --template)
+$ openstoat project init --id project_checkout_rebuild --name "Checkout Rebuild" --template checkout-default-v1
+
+# List projects
+$ openstoat project ls
+
+# Show project details
+$ openstoat project show <project_id>
 ```
 
-### 4.3 Task 命令
+### 4.3 Task Commands
 
 ```bash
-# Task 管理
-$ openstoat task add --plan <plan_id> --title "任务标题" --owner ai|human [--description] [--acceptance-criteria]
-$ openstoat task ls                       # 列出所有任务
-$ openstoat task ls --status ai_ready     # 按状态筛选
-$ openstoat task ls --owner human         # 按负责人筛选
-$ openstoat task show <task_id> [--json]  # 任务详情
-$ openstoat task done <task_id> [--output '{"summary":"..."}']  # 标记完成，output 会创建 handoff
-$ openstoat task update <task_id> [--status] [--title] [--description] [--acceptance-criteria] [--priority]
-$ openstoat task reset <task_id>          # 重置 in_progress/waiting_human 为 ai_ready/pending
-$ openstoat task need-human <task_id> --reason "原因"  # AI 升级为 Human (reason 持久化)
-$ openstoat task depend <task_id> --on <dep_task_id>   # 添加依赖 (拒绝循环)
-$ openstoat task events <task_id>         # 查看任务状态变更历史
+# List tasks (planner must run this before create to avoid duplicates)
+$ openstoat task ls --project project_checkout_rebuild --status ready,in_progress
+
+# Create task (all required fields; planner or worker in self-unblock)
+$ openstoat task create \
+  --project project_checkout_rebuild \
+  --title "Add provider mapping for Paddle" \
+  --description "Implement mapping in payment module" \
+  --acceptance-criteria "Mapping works in checkout paths" \
+  --acceptance-criteria "Unit tests pass" \
+  --status ready \
+  --owner agent_worker \
+  --task-type implementation
+# With dependencies: --depends-on task_001 --depends-on task_002
+# Omit --depends-on when task has no dependencies
+
+# Worker: claim task (agent must append to logs)
+$ openstoat task claim task_001 --as agent_worker --logs-append "Claimed, starting work"
+
+# Worker: start task (agent must append to logs)
+$ openstoat task start task_001 --as agent_worker --logs-append "Started implementation"
+
+# Worker: complete task (handoff mandatory; agent must append to logs)
+$ openstoat task done task_001 \
+  --output "Implemented and tested" \
+  --handoff-summary "Implemented provider mapping for Paddle in checkout and recurring billing paths, added integration coverage. Main changes in src/payments/provider-map.ts. No migration needed." \
+  --logs-append "Completed implementation and tests"
+
+# Worker: self-unblock when blocked by human (dedicated command; requires new --depends-on)
+$ openstoat task self-unblock task_001 --depends-on task_002 \
+  --logs-append "Blocked: need API key. Created task_002 for human."
+
+# Show task details
+$ openstoat task show <task_id> [--json]
 ```
 
-### 4.4 Template 命令
+**Note**: There is no generic `openstoat task update --status ...`. Status transitions use explicit step commands: `claim`, `start`, `done`, `self-unblock`.
+
+### 4.4 Daemon Commands
 
 ```bash
-# Template 管理
-$ openstoat template ls                   # 列出模板
-$ openstoat template show <template_id>   # 查看模板
-$ openstoat template add -f template.json # 添加模板
-$ openstoat template rm <template_id>     # 删除模板
-$ openstoat template set-default <id>     # 设置默认模板
-```
-
-### 4.5 Daemon 命令
-
-```bash
-# 守护进程
-$ openstoat daemon start                  # 启动守护进程
-$ openstoat daemon stop                   # 停止守护进程
-$ openstoat daemon status                 # 查看状态
-$ openstoat daemon logs                   # 查看日志
-```
-
-### 4.6 Handoff 命令
-
-```bash
-# 交接记录
-$ openstoat handoff add --from <task_id> --to <task_id> --summary "..." [--artifacts '[...]']
-$ openstoat handoff ls --task <task_id>   # 查看任务的交接记录
-$ openstoat handoff show <handoff_id>     # 查看交接详情
+$ openstoat daemon start       # Start worker-daemon
+$ openstoat daemon stop        # Stop daemon
+$ openstoat daemon status      # Check status
+$ openstoat daemon logs        # View logs
 ```
 
 ---
 
-## 5. 数据流
+## 5. Data Flow
 
 ```
-┌──────────────────────────────────────────────────────────────┐
-│                      External Agents                         │
-│           (OpenClaw, Claude Code, Cursor, etc.)             │
-│                                                               │
-│  • 读取 Template:  openstoat template ls                     │
-│  • 规划 Task:      openstoat task add ...                    │
-│  • 监听任务:       openstoat task ls --status waiting_human │
-│  • 完成任务:       openstoat task done <id>                  │
-└──────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    openstoat CLI                              │
-│                              │                                │
-│    ┌─────────────────────────┼─────────────────────────┐    │
-│    │                         │                         │    │
-│    ▼                         ▼                         ▼    │
-│ openstoat             openstoat              openstoat       │
-│ plan add              task ls                daemon start    │
-└─────────────────────────┬─────────────────────────┬──────────┘
-                          │                         │
-                          ▼                         ▼
-┌──────────────────────────────────────────────────────────────┐
-│                    openstoat-core                            │
-│                                                               │
-│   ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐    │
-│   │  Plan    │  │  Task    │  │Template  │  │ Handoff  │    │
-│   │ Service  │  │ Service  │  │ Service  │  │ Service  │    │
-│   └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬─────┘    │
-│        │             │             │             │           │
-│        └─────────────┴─────────────┴─────────────┘           │
-│                          │                                    │
-│                          ▼                                    │
-│   ┌──────────────────────────────────────────────────────┐   │
-│   │                   SQLite                               │   │
-│   │              (~/.openstoat/openstoat.db)              │   │
-│   └──────────────────────────────────────────────────────┘   │
-└──────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 6. Daemon 调度流程
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                   openstoat daemon                          │
-│                                                             │
-│   ┌─────────────────────────────────────────────────────┐  │
-│   │                  Scheduler                           │  │
-│   │                                                     │  │
-│   │   while true:                                      │  │
-│   │     tasks = exec("openstoat task ls --status ai_ready --json") │
-│   │     for task in tasks:                             │  │
-│   │       agent = config.get("agent")                  │  │
-│   │       exec(f"{agent} do-task --task-id {task.id}") │  │
-│   │       exec("openstoat task update {task.id} --status in_progress") │
-│   │     sleep(poll_interval)                           │  │
-│   └─────────────────────────────────────────────────────┘  │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                    External Agents / Humans                        │
+│                                                                    │
+│  Agent Planner:                                                    │
+│  - openstoat task ls --project X --status ready,in_progress        │
+│  - openstoat task create --project X ... (when no duplicate)       │
+│                                                                    │
+│  Agent Worker / Human Worker:                                      │
+│  - openstoat task claim <id> --as <role> --logs-append "..."        │
+│  - openstoat task start <id> --as <role> --logs-append "..."        │
+│  - openstoat task done <id> --output "..." --handoff-summary "..."  │
+│  - openstoat task self-unblock <id> --depends-on <human_task>       │
+└────────────────────────────────────┬─────────────────────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                      openstoat CLI                                 │
+│                                                                    │
+│   project init | project ls | project show                         │
+│   task ls | task create | task claim | task start | task done      │
+│   task self-unblock | task show                                    │
+│   daemon start | daemon stop | daemon status | daemon logs         │
+└────────────────────────────────────┬─────────────────────────────┘
+                                     │
+                                     ▼
+┌──────────────────────────────────────────────────────────────────┐
+│                      openstoat-core                                │
+│                                                                    │
+│   ┌────────────┐  ┌────────────┐  ┌────────────┐                  │
+│   │  Project   │  │   Task     │  │  Handoff   │                  │
+│   │  Service   │  │  Service  │  │  Service   │                  │
+│   └─────┬──────┘  └─────┬──────┘  └─────┬──────┘                  │
+│         │                │                │                         │
+│         └────────────────┴────────────────┘                         │
+│                          │                                          │
+│                          ▼                                          │
+│   ┌──────────────────────────────────────────────────────────────┐ │
+│   │                      SQLite                                    │ │
+│   │               (~/.openstoat/openstoat.db)                     │ │
+│   └──────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 7. 状态机
+## 6. Worker Daemon Flow
 
 ```
-Task 状态流转:
-
-pending → ai_ready → in_progress → waiting_human → human_done → done
-                ↑              │                │               │
-                └──────────────┴────────────────┴───────────────┘
-
-特殊操作:
-- AI 需要人工: in_progress → waiting_human (via need-human)
-- Human 完成: waiting_human → human_done → in_progress (下游任务)
-- 审核不通过: 创建修复任务 (AI)，完成后重新进入原审核任务
-
-审核不通过流程:
-  Task E (审核) → Human 标记 "需要修改"
-       ↓
-  创建 Task E-1 (修复, AI) → AI 完成 → openstoat task done E-1
-       ↓
-  Task E 重新进入 waiting_human 等待审核
+┌─────────────────────────────────────────────────────────────────┐
+│                     openstoat worker-daemon                      │
+│                                                                  │
+│   ┌───────────────────────────────────────────────────────────┐  │
+│   │                      Scheduler                             │  │
+│   │                                                            │  │
+│   │   while true:                                              │  │
+│   │     tasks = exec("openstoat task ls --status ready         │  │
+│   │                   --owner agent_worker --json")             │  │
+│   │     # Filter: dependencies must be satisfied                │  │
+│   │     for task in tasks:                                     │  │
+│   │       agent = config.get("agent")  # external agent         │  │
+│   │       exec(f"{agent} do-task --task-id {task.id}")         │  │
+│   │     sleep(poll_interval)                                    │  │
+│   └───────────────────────────────────────────────────────────┘  │
+│                                                                  │
+│   OpenStoat does not run LLM inference. Daemon invokes external  │
+│   agents to execute tasks.                                        │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 8. 存储结构
+## 7. State Machine
+
+```
+Task status flow:
+
+[ready] ──claim──> [in_progress] ──done──> [done]
+                       │
+                       └──self-unblock──> [ready]
+                            (only when --depends-on adds new human task)
+```
+
+**Status semantics**:
+- `ready`: Task is in queue; claimable only when all `depends_on` are done
+- `in_progress`: Currently being executed
+- `done`: Accepted as complete
+
+**Invalid statuses** (not in this model): `todo`, `ai_ready`, `waiting_human`, `blocked`, `review`, `human_done`
+
+**Self-unblock guard**:
+- `in_progress -> ready` allowed only via `openstoat task self-unblock`
+- Must include at least one new `--depends-on` (human task)
+- No generic `task update --status ready`
+
+---
+
+## 8. Storage Schema
 
 ```sql
--- Plan 表
-CREATE TABLE plans (
-  id TEXT PRIMARY KEY,
-  title TEXT NOT NULL,
-  description TEXT,
-  status TEXT DEFAULT 'planned',
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT
-);
-
--- Task 表
-CREATE TABLE tasks (
-  id TEXT PRIMARY KEY,
-  plan_id TEXT REFERENCES plans(id),
-  title TEXT NOT NULL,
-  description TEXT,
-  owner TEXT CHECK(owner IN ('ai', 'human')),
-  status TEXT DEFAULT 'pending',
-  depends_on TEXT,  -- JSON array of task IDs
-  output TEXT,      -- JSON
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-  updated_at TEXT
-);
-
--- Template 表
-CREATE TABLE templates (
+-- Project table (template-bound)
+CREATE TABLE projects (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  version TEXT,
-  rules TEXT NOT NULL,  -- JSON
-  keywords TEXT,        -- JSON
-  is_default INTEGER DEFAULT 0
+  template_context TEXT NOT NULL,  -- JSON: { version, rules: [{ task_type, default_owner }] }
+  status TEXT DEFAULT 'active' CHECK(status IN ('active', 'archived')),
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
 );
 
--- Handoff 表
+-- Task table (first-level only; no plan_id)
+CREATE TABLE tasks (
+  id TEXT PRIMARY KEY,
+  project TEXT NOT NULL REFERENCES projects(id),
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  acceptance_criteria TEXT NOT NULL,  -- JSON array
+  depends_on TEXT NOT NULL,           -- JSON array of task IDs
+  status TEXT NOT NULL CHECK(status IN ('ready', 'in_progress', 'done')),
+  owner TEXT NOT NULL CHECK(owner IN ('agent_worker', 'human_worker')),
+  task_type TEXT NOT NULL CHECK(task_type IN ('implementation', 'testing', 'review', 'credentials', 'deploy', 'docs', 'custom')),
+  output TEXT,
+  logs TEXT NOT NULL,                 -- JSON array; agents append on every step
+  created_by TEXT,
+  claimed_by TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+-- Handoff table (summary only; no artifacts)
 CREATE TABLE handoffs (
   id TEXT PRIMARY KEY,
-  from_task_id TEXT REFERENCES tasks(id),
-  to_task_id TEXT REFERENCES tasks(id),
-  summary TEXT,
-  artifacts TEXT,  -- JSON
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
+  from_task_id TEXT NOT NULL REFERENCES tasks(id),
+  to_task_id TEXT,                   -- NULL when no downstream (audit-only)
+  summary TEXT NOT NULL,             -- min 200 chars
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
--- Config 表
+-- Config table (daemon, agent path, etc.)
 CREATE TABLE config (
   key TEXT PRIMARY KEY,
   value TEXT
@@ -332,23 +338,34 @@ CREATE TABLE config (
 
 ---
 
-## 9. 安装与使用
+## 9. Core Concepts Mapping
+
+| Concept | Architecture Component |
+|---------|------------------------|
+| **Project (template-bound)** | `projects` table; `template_context` JSON |
+| **Task** | `tasks` table; first-level only, no plan parent |
+| **Kanban** | Operational view: tasks by project, status, owner |
+| **Handoff** | `handoffs` table; summary only, required for all completions |
+
+---
+
+## 10. Install and Run
 
 ```bash
-# 开发模式
+# Development
 $ bun install
 $ bun --cwd packages/openstoat-cli run build
 
-# 全局安装
+# Global install
 $ npm install -g openstoat
 
-# 使用
+# Usage
 $ openstoat --help
-$ openstoat init
-$ openstoat plan add "集成支付"
+$ openstoat project init --id my_project --name "My Project" --template default-v1
+$ openstoat task ls --project my_project --status ready,in_progress
 $ openstoat daemon start
 ```
 
 ---
 
-*Architecture v1.0 - 2026-02-25*
+*Architecture v3.0 - 2026-02-26*
