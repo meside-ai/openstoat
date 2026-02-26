@@ -1,0 +1,53 @@
+---
+/**
+ * GitBook-style breadcrumb navigation for doc hierarchy.
+ */
+interface Crumb {
+  href: string;
+  label: string;
+}
+
+interface Props {
+  items: Crumb[];
+}
+
+const { items } = Astro.props;
+---
+
+{items.length > 0 && (
+  <nav class="mb-6" aria-label="Breadcrumb">
+    <ol class="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+      {items.map((item, i) => (
+        <li class="flex items-center gap-2">
+          {i > 0 && (
+            <svg
+              class="w-4 h-4 text-slate-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          )}
+          {i < items.length - 1 ? (
+            <a
+              href={item.href}
+              class="hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+            >
+              {item.label}
+            </a>
+          ) : (
+            <span class="text-slate-900 dark:text-slate-100 font-medium">
+              {item.label}
+            </span>
+          )}
+        </li>
+      ))}
+    </ol>
+  </nav>
+)}

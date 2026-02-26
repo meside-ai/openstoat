@@ -2,7 +2,9 @@
   "name": "openstoat",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["packages/*"],
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "cd packages/openstoat-types && bun run build && cd ../openstoat-core && bun run build && cd ../openstoat-daemon && bun run build && cd ../openstoat-web && bun run build && cd ../openstoat-cli && bun run build",
     "test": "bun test",
@@ -10,7 +12,10 @@
     "openstoat": "bun run packages/openstoat-cli/dist/index.js",
     "web": "bun run packages/openstoat-web/src/index.ts",
     "web:dev": "bun run --watch packages/openstoat-web/src/index.ts",
-    "link:global": "bun run build && cd packages/openstoat-cli && npm link --force"
+    "docs": "cd packages/openstoat-docs && bun run dev",
+    "link:global": "bun run build && cd packages/openstoat-cli && npm link --force",
+    "docs:build": "cd packages/openstoat-docs && bun run build",
+    "docs:preview": "cd packages/openstoat-docs && bun run preview"
   },
   "devDependencies": {
     "@types/bun": "latest",

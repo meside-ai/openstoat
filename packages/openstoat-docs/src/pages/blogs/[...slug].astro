@@ -1,0 +1,58 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DocToc from '../../components/DocToc.astro';
+import NextPrev from '../../components/NextPrev.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs');
+  const blogs = await getCollection('blogs');
+  return blogs.map((blog) => ({
+    params: { slug: blog.id.replace(/\.md$/, '') },
+    props: { blog, docs, blogs },
+  }));
+}
+
+const { blog, docs, blogs } = Astro.props;
+const { Content, headings } = await render(blog);
+const blogSlug = blog.id.replace(/\.md$/, '');
+
+const sortedBlogs = [...blogs].sort((a, b) => a.id.localeCompare(b.id));
+const blogIndex = sortedBlogs.findIndex((b) => b.id.replace(/\.md$/, '') === blogSlug);
+const prevBlog = blogIndex > 0 ? sortedBlogs[blogIndex - 1] : null;
+const nextBlog = blogIndex >= 0 && blogIndex < sortedBlogs.length - 1 ? sortedBlogs[blogIndex + 1] : null;
+
+const sidebarItems = [
+  ...docs.map((d) => {
+    const s = d.id.replace(/\.md$/, '');
+    return { href: `/docs/${s}`, label: d.data.title ?? s, active: false };
+  }),
+  ...blogs.map((b) => {
+    const s = b.id.replace(/\.md$/, '');
+    return { href: `/blogs/${s}`, label: b.data.title ?? s, active: s === blogSlug };
+  }),
+];
+
+const breadcrumbs = [
+  { href: '/', label: 'Home' },
+  { href: '/blogs', label: 'Blogs' },
+  { href: `/blogs/${blogSlug}`, label: blog.data.title ?? blogSlug },
+];
+---
+
+<Layout title={blog.data.title ?? blogSlug} sidebarItems={sidebarItems} currentSection="blogs" contentClass="max-w-7xl">
+  <div class="flex gap-8">
+    <div class="flex-1 min-w-0">
+      <Breadcrumbs items={breadcrumbs} />
+      <article class="prose dark:prose-invert max-w-none">
+        <Content />
+      </article>
+      <NextPrev
+        prev={prevBlog ? { href: `/blogs/${prevBlog.id.replace(/\.md$/, '')}`, label: prevBlog.data.title ?? prevBlog.id } : null}
+        next={nextBlog ? { href: `/blogs/${nextBlog.id.replace(/\.md$/, '')}`, label: nextBlog.data.title ?? nextBlog.id } : null}
+      />
+    </div>
+    <DocToc headings={headings} />
+  </div>
+</Layout>

@@ -65,6 +65,14 @@ openstoat handoff ls              # Handoffs
 
 Run `openstoat --help` for full usage.
 
+## Docs Deployment (Cloudflare Pages)
+
+The docs site (`packages/openstoat-docs`) deploys to Cloudflare Pages on push to `main`. Setup:
+
+1. Create a [Cloudflare Pages project](https://dash.cloudflare.com/?to=/:account/pages) named `openstoat-docs`
+2. Add GitHub secrets: `CLOUDFLARE_API_TOKEN` (Pages Edit permission), `CLOUDFLARE_ACCOUNT_ID`
+3. Push to `main` or trigger the "Deploy Docs to Cloudflare Pages" workflow manually
+
 ## Project Status
 
 **Today is Day 1.** OpenStoat is in active development. The core MVP is implemented:

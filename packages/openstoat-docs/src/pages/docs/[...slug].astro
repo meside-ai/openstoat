@@ -1,0 +1,58 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import DocToc from '../../components/DocToc.astro';
+import NextPrev from '../../components/NextPrev.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import { getCollection, render } from 'astro:content';
+
+export async function getStaticPaths() {
+  const docs = await getCollection('docs');
+  const blogs = await getCollection('blogs');
+  return docs.map((doc) => ({
+    params: { slug: doc.id.replace(/\.md$/, '') },
+    props: { doc, docs, blogs },
+  }));
+}
+
+const { doc, docs, blogs } = Astro.props;
+const { Content, headings } = await render(doc);
+const docSlug = doc.id.replace(/\.md$/, '');
+
+const sortedDocs = [...docs].sort((a, b) => a.id.localeCompare(b.id));
+const docIndex = sortedDocs.findIndex((d) => d.id.replace(/\.md$/, '') === docSlug);
+const prevDoc = docIndex > 0 ? sortedDocs[docIndex - 1] : null;
+const nextDoc = docIndex >= 0 && docIndex < sortedDocs.length - 1 ? sortedDocs[docIndex + 1] : null;
+
+const sidebarItems = [
+  ...docs.map((d) => {
+    const s = d.id.replace(/\.md$/, '');
+    return { href: `/docs/${s}`, label: d.data.title ?? s, active: s === docSlug };
+  }),
+  ...blogs.map((b) => {
+    const s = b.id.replace(/\.md$/, '');
+    return { href: `/blogs/${s}`, label: b.data.title ?? s, active: false };
+  }),
+];
+
+const breadcrumbs = [
+  { href: '/', label: 'Home' },
+  { href: '/docs', label: 'Docs' },
+  { href: `/docs/${docSlug}`, label: doc.data.title ?? docSlug },
+];
+---
+
+<Layout title={doc.data.title ?? docSlug} sidebarItems={sidebarItems} currentSection="docs" contentClass="max-w-7xl">
+  <div class="flex gap-8">
+    <div class="flex-1 min-w-0">
+      <Breadcrumbs items={breadcrumbs} />
+      <article class="prose dark:prose-invert max-w-none">
+        <Content />
+      </article>
+      <NextPrev
+        prev={prevDoc ? { href: `/docs/${prevDoc.id.replace(/\.md$/, '')}`, label: prevDoc.data.title ?? prevDoc.id } : null}
+        next={nextDoc ? { href: `/docs/${nextDoc.id.replace(/\.md$/, '')}`, label: nextDoc.data.title ?? nextDoc.id } : null}
+      />
+    </div>
+    <DocToc headings={headings} />
+  </div>
+</Layout>
