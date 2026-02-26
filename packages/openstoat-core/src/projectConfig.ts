@@ -11,6 +11,12 @@ export interface OpenstoatConfig {
   project?: string;
   /** Path to external agent executable. Daemon invokes this for ready agent_worker tasks. */
   agent?: string;
+  /**
+   * Optional template for how to pass the prompt to the agent.
+   * Use {{prompt}} as placeholder. Default: {{prompt}} (positional arg).
+   * Examples: "--prompt {{prompt}}", "-m {{prompt}}", "chat {{prompt}}"
+   */
+  agent_args_template?: string;
 }
 
 const CONFIG_FILENAME = '.openstoat.json';
@@ -29,7 +35,9 @@ export function loadProjectConfig(cwd?: string): OpenstoatConfig | null {
     if (typeof parsed !== 'object' || parsed === null) return null;
     const project = typeof parsed.project === 'string' ? parsed.project : undefined;
     const agent = typeof parsed.agent === 'string' ? parsed.agent : undefined;
-    return { project, agent };
+    const agent_args_template =
+      typeof parsed.agent_args_template === 'string' ? parsed.agent_args_template : undefined;
+    return { project, agent, agent_args_template };
   } catch {
     return null;
   }

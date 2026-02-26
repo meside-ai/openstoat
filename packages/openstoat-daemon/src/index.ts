@@ -16,6 +16,7 @@ const PREFIX = '[daemon]';
 export function startDaemon(pollIntervalMs = 5000): void {
   const config = loadProjectConfig();
   const agentCmd = config?.agent ?? null;
+  const agentArgsTemplate = config?.agent_args_template ?? '{{prompt}}';
   if (!agentCmd) {
     console.log(
       `${PREFIX} No agent configured. Add "agent" to .openstoat.json in current directory. Daemon will poll but not execute tasks.`
@@ -37,7 +38,8 @@ export function startDaemon(pollIntervalMs = 5000): void {
               invoked = true;
               console.log(`${PREFIX} Invoking agent for task ${task.id} (project ${projectId})`);
               const prompt = `Execute OpenStoat task ${task.id}. OPENSTOAT_TASK_ID=${task.id} OPENSTOAT_PROJECT_ID=${projectId}. Run: openstoat task claim ${task.id} --as agent_worker --logs-append "Claimed"; implement the task; then openstoat task done with --output and --handoff-summary (min 200 chars).`;
-              const fullCmd = `${agentCmd} ${JSON.stringify(prompt)}`;
+              const args = agentArgsTemplate.replace(/\{\{prompt\}\}/g, JSON.stringify(prompt));
+              const fullCmd = `${agentCmd} ${args}`;
               const proc = Bun.spawn({
                 cmd: ['sh', '-c', fullCmd],
                 env: {

@@ -193,12 +193,14 @@ Daemon and skills read config from `.openstoat.json` in the current directory:
 ```json
 {
   "project": "<project_id>",
-  "agent": "/path/to/agent-executable"
+  "agent": "/path/to/agent-executable",
+  "agent_args_template": "{{prompt}}"
 }
 ```
 
 - `project`: Project ID used as `--project` in task commands. Skills read this.
 - `agent`: Path to external agent. Daemon invokes this for ready agent_worker tasks.
+- `agent_args_template`: Optional. How to pass the prompt to the agent. Use `{{prompt}}` as placeholder. Default: `{{prompt}}` (positional). Examples: `--prompt {{prompt}}`, `-m {{prompt}}`.
 
 Run `openstoat daemon start` from the project root where `.openstoat.json` lives.
 

@@ -1,4 +1,5 @@
 {
   "project": "<project_id>",
-  "agent": "/path/to/your/agent-executable"
+  "agent": "/path/to/your/agent-executable",
+  "agent_args_template": "{{prompt}}"
 }

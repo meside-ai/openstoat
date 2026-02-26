@@ -37,10 +37,15 @@ export const daemonCommands = {
           }
 
           const agent = await prompt('Agent executable path (for daemon to invoke)', existing?.agent ?? '');
+          const agentArgsTemplate = await prompt(
+            'Agent args template (use {{prompt}} as placeholder; default: {{prompt}})',
+            (existing as { agent_args_template?: string })?.agent_args_template ?? '{{prompt}}'
+          );
 
           const config: Record<string, string> = {};
           if (project) config.project = project;
           if (agent) config.agent = agent;
+          if (agentArgsTemplate) config.agent_args_template = agentArgsTemplate;
 
           saveProjectConfig(config);
           console.log('\nCreated .openstoat.json');
