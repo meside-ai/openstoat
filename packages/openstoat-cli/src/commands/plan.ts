@@ -23,17 +23,23 @@ keyword matching rules.
      openstoat template show <template_id>
      → e.g. "api_key", "review", "deploy" → human; everything else → ai
 
-  2. Write a clear plan with numbered steps:
+  2. Write a clear plan. Include requirements and acceptance criteria per task:
      openstoat plan add "Integrate Paddle payment
      1. Add Paddle to PaymentProvider enum
+        - Add enum value, update types
+        - Acceptance: Compiles, enum includes Paddle
      2. Provide Paddle API Key
+        - Human provides sandbox key
+        - Acceptance: Key stored in config
      3. Implement PaddlePaymentService
+        - Use REST API, handle webhooks
+        - Acceptance: Unit tests pass
      4. Write unit tests
      5. Code review
      6. Deploy to staging"
-     → First line = plan title
-     → Each numbered/bulleted line = one task
-     → Keywords in task titles are matched to template rules
+     → First line = plan title. Bullets under each number = task description.
+     → Use "Acceptance:" or "AC:" or "验收:" for completion criteria (Executor needs this).
+     → Keywords in titles → template owner (API Key→human, review→human).
 
   3. Verify the result:
      openstoat plan show <plan_id>
@@ -43,10 +49,12 @@ keyword matching rules.
 
 ## Plan Content Format
 
-  First line = plan title. Remaining lines are tasks.
-  Supported formats:
-    Numbered:  1. Task one  2. Task two
-    Bullets:   - Task one   * Task two
+  First line = plan title. Numbered items = tasks. Bullets under each = description.
+  Use "Acceptance:" or "AC:" or "验收:" for per-task completion criteria.
+  Example:
+    1. Task title
+       - Requirement detail
+       - Acceptance: Done when X works
 
 ## Subcommands
 

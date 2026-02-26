@@ -87,6 +87,25 @@ describe('plan', () => {
     expect(showOut).toContain('Task');
   });
 
+  test('plan add with Acceptance criteria parses correctly', () => {
+    const planContent = `Plan with AC
+1. Task with acceptance
+   - Do something
+   - Acceptance: Must work correctly
+2. Simple task`;
+    const { stdout, code } = runOpenstoat(['plan', 'add', planContent]);
+    expect(code).toBe(0);
+    const planId = stdout.match(/plan_[a-z0-9]+/)?.[0];
+    if (!planId) return;
+    const { stdout: showOut } = runOpenstoat(['plan', 'show', planId]);
+    expect(showOut).toContain('Task with acceptance');
+    const tasks = runOpenstoat(['task', 'ls', '--plan', planId, '--json']);
+    const parsed = JSON.parse(tasks.stdout);
+    const task1 = parsed.find((t: { title: string }) => t.title.includes('acceptance'));
+    expect(task1).toBeDefined();
+    expect(task1.acceptance_criteria).toContain('Must work correctly');
+  });
+
   test('plan status 显示计划状态', () => {
     const { stdout } = runOpenstoat(['plan', 'ls']);
     const planId = stdout.split('\n')[0]?.split('\t')[0];
@@ -184,9 +203,20 @@ describe('task add and depend', () => {
     if (!planId?.startsWith('plan_')) return;
     const { stdout: addOut, code } = runOpenstoat([
       'task', 'add', '--plan', planId, '--title', '手动任务', '--owner', 'ai',
+      '--description', '手动添加的任务描述', '--acceptance-criteria', '任务完成',
     ]);
     expect(code).toBe(0);
     expect(addOut).toContain('Task created');
+  });
+
+  test('task add without description/AC fails', () => {
+    const { stdout } = runOpenstoat(['plan', 'ls']);
+    const planId = stdout.trim().split('\n')[0]?.split('\t')[0];
+    if (!planId?.startsWith('plan_')) return;
+    const { code, stderr } = runOpenstoat(['task', 'add', '--plan', planId, '--title', 'No desc', '--owner', 'ai']);
+    expect(code).not.toBe(0);
+    expect(stderr).toContain('description');
+    expect(stderr).toContain('acceptance-criteria');
   });
 
   test('task add with description and acceptance-criteria', () => {

@@ -12,6 +12,7 @@ import {
   listHandoffs,
   listHandoffsByTask,
   getAllConfig,
+  getTaskEvents,
 } from '@openstoat/core';
 import type { FilterParams } from './filters';
 import { parseParams, buildUrl } from './filters';
@@ -69,16 +70,18 @@ function renderPlans(params: FilterParams): string {
       <div class="detail-section">
         <h2>Tasks (${tasks.length})</h2>
         <table>
-          <thead><tr><th>ID</th><th>Title</th><th>Owner</th><th>Status</th></tr></thead>
+          <thead><tr><th>ID</th><th>Title</th><th>Type</th><th>Owner</th><th>Status</th><th>Priority</th></tr></thead>
           <tbody>
             ${tasks
               .map(
                 (t) =>
                   `<tr>
-                <td>${link(t.id, buildUrl(BASE, { ...params, view: 'tasks', plan: t.plan_id }))}</td>
+                <td>${link(t.id, buildUrl(BASE, { ...params, view: 'tasks', plan: t.plan_id, task: t.id }))}</td>
                 <td>${escapeHtml(t.title)}</td>
+                <td>${escapeHtml(t.task_type)}</td>
                 <td>${escapeHtml(t.owner)}</td>
                 <td>${escapeHtml(t.status)}</td>
+                <td>${t.priority}</td>
               </tr>`
               )
               .join('')}
@@ -120,6 +123,7 @@ function renderTasks(params: FilterParams): string {
     planId: params.plan,
   });
   const plans = listPlans();
+  const selectedTask = params.task ? getTask(params.task) : null;
 
   const statusOptions = [
     '',
@@ -148,28 +152,64 @@ function renderTasks(params: FilterParams): string {
     </form>
   `;
 
-  const table = `
-    <table>
-      <thead><tr><th>ID</th><th>Plan</th><th>Title</th><th>Owner</th><th>Status</th><th>Created</th></tr></thead>
-      <tbody>
-        ${tasks
-          .map(
-            (t) =>
-              `<tr>
-            <td>${link(t.id, buildUrl(BASE, { ...params, view: 'handoffs', task: t.id }))}</td>
-            <td>${link(t.plan_id, buildUrl(BASE, { ...params, view: 'plans', plan: t.plan_id }))}</td>
-            <td>${escapeHtml(t.title)}</td>
-            <td>${escapeHtml(t.owner)}</td>
-            <td>${escapeHtml(t.status)}</td>
-            <td>${escapeHtml(t.created_at)}</td>
-          </tr>`
-          )
-          .join('')}
-      </tbody>
-    </table>
+  let body = '';
+
+  if (selectedTask) {
+    const events = getTaskEvents(selectedTask.id);
+    body += `
+      <div class="detail-section">
+        <h2>Task: ${escapeHtml(selectedTask.title)}</h2>
+        <p><strong>ID:</strong> ${escapeHtml(selectedTask.id)}</p>
+        <p><strong>Plan:</strong> ${link(selectedTask.plan_id, buildUrl(BASE, { ...params, view: 'plans', plan: selectedTask.plan_id }))}</p>
+        <p><strong>Owner:</strong> ${escapeHtml(selectedTask.owner)}</p>
+        <p><strong>Status:</strong> ${escapeHtml(selectedTask.status)}</p>
+        <p><strong>Type:</strong> ${escapeHtml(selectedTask.task_type)}</p>
+        <p><strong>Priority:</strong> ${selectedTask.priority}</p>
+        <p><strong>Description:</strong> ${escapeHtml(selectedTask.description ?? '-')}</p>
+        <p><strong>Acceptance criteria:</strong> ${escapeHtml(selectedTask.acceptance_criteria ?? '-')}</p>
+        ${selectedTask.waiting_reason ? `<p><strong>Waiting reason:</strong> <span style="color:#c00">${escapeHtml(selectedTask.waiting_reason)}</span></p>` : ''}
+        <p><strong>Depends on:</strong> ${selectedTask.depends_on.length ? selectedTask.depends_on.map((d) => link(d, buildUrl(BASE, { ...params, task: d }))).join(', ') : 'none'}</p>
+        <p><a href="${escapeHtml(buildUrl(BASE, { ...params, view: 'handoffs', task: selectedTask.id }))}">View handoffs for this task</a></p>
+        ${events.length > 0 ? `
+        <h3>Status history</h3>
+        <table>
+          <thead><tr><th>Time</th><th>From</th><th>To</th><th>Reason</th></tr></thead>
+          <tbody>
+            ${events.map((e) => `<tr><td>${escapeHtml(e.created_at)}</td><td>${escapeHtml(e.from_status ?? '-')}</td><td>${escapeHtml(e.to_status)}</td><td>${escapeHtml(e.reason ?? '-')}</td></tr>`).join('')}
+          </tbody>
+        </table>
+        ` : ''}
+      </div>
+    `;
+  }
+
+  body += `
+    <div class="detail-section">
+      <h2>Tasks (${tasks.length})</h2>
+      <table>
+        <thead><tr><th>ID</th><th>Plan</th><th>Title</th><th>Type</th><th>Owner</th><th>Status</th><th>Priority</th><th>Created</th></tr></thead>
+        <tbody>
+          ${tasks
+            .map(
+              (t) =>
+                `<tr>
+              <td>${link(t.id, buildUrl(BASE, { ...params, task: t.id }))}</td>
+              <td>${link(t.plan_id, buildUrl(BASE, { ...params, view: 'plans', plan: t.plan_id }))}</td>
+              <td>${escapeHtml(t.title)}</td>
+              <td>${escapeHtml(t.task_type)}</td>
+              <td>${escapeHtml(t.owner)}</td>
+              <td>${escapeHtml(t.status)}</td>
+              <td>${t.priority}</td>
+              <td>${escapeHtml(t.created_at)}</td>
+            </tr>`
+            )
+            .join('')}
+        </tbody>
+      </table>
+    </div>
   `;
 
-  return page('Tasks', filterForm + table, params, BASE);
+  return page('Tasks', filterForm + body, params, BASE);
 }
 
 function renderTemplates(params: FilterParams): string {

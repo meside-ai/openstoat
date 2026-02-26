@@ -58,16 +58,22 @@ SCENARIO WORKFLOWS
   1. Read the template to understand which tasks need humans:
      openstoat template show <template_id>
 
-  2. Break the goal into numbered steps and create a plan:
+  2. Break the goal into numbered steps. Include requirements and acceptance criteria:
      openstoat plan add "Integrate Paddle payment
      1. Add Paddle to PaymentProvider enum
+        - Add enum value, update types
+        - Acceptance: Compiles, enum includes Paddle
      2. Provide Paddle API Key
+        - Human provides sandbox key
+        - Acceptance: Key stored in config
      3. Implement PaddlePaymentService
+        - Use REST API, handle webhooks
+        - Acceptance: Unit tests pass, integration works
      4. Write unit tests
      5. Code review
      6. Deploy to staging"
-     → The system auto-assigns owner (ai/human) via template keyword matching.
-       e.g. "API Key" → human (credentials), "Code review" → human, rest → ai.
+     → Use "Acceptance:" or "AC:" or "验收:" for per-task completion criteria.
+     → System auto-assigns owner via template keywords (API Key→human, Code review→human).
 
   3. Verify the result:
      openstoat plan show <plan_id>
@@ -107,9 +113,10 @@ SCENARIO WORKFLOWS
 
 ## Scenario 5: Add sub-tasks after review rejection (Executor Agent)
 
-  openstoat task add --plan <plan_id> --title "Fix review comments" --owner ai
+  openstoat task add --plan <plan_id> --title "Fix review comments" --owner ai \\
+    --description "Address reviewer feedback on PR" --acceptance-criteria "All comments resolved, re-approved"
   openstoat task depend <new_task_id> --on <review_task_id>
-  → The new task won't start until the review task is done. Daemon picks it up.
+  → --description and --acceptance-criteria are REQUIRED. Executor needs them.
 
 ═══════════════════════════════════════════════════════════════════════════════
 RULES & REFERENCE

@@ -33,12 +33,13 @@ Completing a task triggers downstream dependent tasks to become ai_ready.
      openstoat task need-human <task_id> --reason "explain what you need"
 
   If review was rejected, add a fix sub-task:
-     openstoat task add --plan <plan_id> --title "Fix review comments" --owner ai
+     openstoat task add --plan <plan_id> --title "Fix review comments" --owner ai \\
+       --description "Address reviewer feedback" --acceptance-criteria "All comments resolved"
      openstoat task depend <new_task_id> --on <original_task_id>
 
 ## Subcommands
 
-  add              Add task; requires --plan, --title, --owner (ai|human)
+  add              Add task; REQUIRES --plan, --title, --owner, --description, --acceptance-criteria
   ls               List tasks; filters: --status, --owner, --plan; use --json for parsing
   show <task_id>   Show task details; use --json for machine parsing
   done <task_id>   Mark done; optional --output for handoff context
@@ -62,8 +63,8 @@ Completing a task triggers downstream dependent tasks to become ai_ready.
   --status <s>     Filter by status (ls) or set status (update)
   --owner ai|human Filter by owner (ls) or set owner (add)
   --plan <id>      Filter by plan (ls) or assign to plan (add)
-  --description    Task description / requirements
-  --acceptance-criteria  Acceptance criteria for completion
+  --description    REQUIRED for add. Task requirements; Executor needs this to know what to do.
+  --acceptance-criteria  REQUIRED for add. When is it done? Executor needs this to know when to mark done.
   --output         JSON output when marking done (creates handoffs to downstream)
 `;
 
@@ -79,8 +80,8 @@ export const taskCmd = {
       })
       .option('plan', { type: 'string', describe: 'Plan ID; required for add; filter for ls' })
       .option('title', { type: 'string', describe: 'Task title; required for add' })
-      .option('description', { type: 'string', describe: 'Task description / requirements' })
-      .option('acceptance-criteria', { type: 'string', describe: 'Acceptance criteria for completion' })
+      .option('description', { type: 'string', describe: 'REQUIRED for add. Task requirements.' })
+      .option('acceptance-criteria', { type: 'string', describe: 'REQUIRED for add. When is task done?' })
       .option('owner', { type: 'string', choices: ['ai', 'human'], describe: 'Task owner; required for add; filter for ls' })
       .option('status', { type: 'string', describe: 'Task status; for update; filter for ls' })
       .option('reason', { type: 'string', describe: 'Optional for need-human; why human is needed (persisted)' })
@@ -94,7 +95,7 @@ export const taskCmd = {
       .example('$0 task ls --json', 'JSON output')
       .example('$0 task done task_xxx', 'Complete task, trigger downstream')
       .example('$0 task done task_xxx --output \'{"summary":"..."}\'', 'Complete with handoff context')
-      .example('$0 task add --plan plan_xxx --title "Implement feature" --owner ai --description "..."', 'Add task with description')
+      .example('$0 task add --plan plan_xxx --title "Implement feature" --owner ai --description "Use REST API" --acceptance-criteria "Tests pass"', 'Add task (description and AC required)')
       .example('$0 task need-human task_xxx --reason "needs code review"', 'Escalate to human')
       .example('$0 task depend task_a --on task_b', 'task_a depends on task_b')
       .example('$0 task reset task_xxx', 'Reset stuck task to ai_ready')
@@ -129,11 +130,15 @@ export const taskCmd = {
           console.error('task add requires --plan, --title, --owner');
           process.exit(1);
         }
+        if (!argv.description || !argv.acceptanceCriteria) {
+          console.error('task add requires --description and --acceptance-criteria (Executor needs these to know what to do and when done)');
+          process.exit(1);
+        }
         const task = createTask({
           planId: argv.plan,
           title: argv.title,
-          description: argv.description,
-          acceptanceCriteria: argv.acceptanceCriteria,
+          description: argv.description!,
+          acceptanceCriteria: argv.acceptanceCriteria!,
           owner: argv.owner as TaskOwner,
           taskType: argv.taskType,
           priority: argv.priority,
