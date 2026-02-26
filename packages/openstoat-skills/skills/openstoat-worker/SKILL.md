@@ -68,6 +68,15 @@ For tasks with dependencies, read upstream handoffs and logs:
 openstoat task show <task_id> [--json]
 ```
 
+### 7. When Invoked by Daemon
+
+When `openstoat daemon start` invokes you, the daemon sets:
+
+- `OPENSTOAT_TASK_ID`: The task ID to work on (use this as `<task_id>` in all commands)
+- `OPENSTOAT_PROJECT_ID`: The project ID (use as `--project` when creating human tasks)
+
+Use `OPENSTOAT_TASK_ID` as the task to claim, start, and complete. Do not ask the user for a task ID when this env is set.
+
 ---
 
 ## What NOT to Do

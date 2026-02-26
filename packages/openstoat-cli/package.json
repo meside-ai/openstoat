@@ -1,7 +1,6 @@
 {
   "name": "openstoat-cli",
   "version": "0.1.0",
-  "private": true,
   "bin": {
     "openstoat": "./bin/openstoat"
   },
