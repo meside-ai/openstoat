@@ -25,12 +25,25 @@ export interface Task {
   plan_id: string;
   title: string;
   description: string | null;
+  acceptance_criteria: string | null;
   owner: TaskOwner;
   status: TaskStatus;
   depends_on: string[];
   output: unknown;
+  task_type: string;
+  priority: number;
+  waiting_reason: string | null;
   created_at: string;
   updated_at: string | null;
+}
+
+export interface TaskEvent {
+  id: number;
+  task_id: string;
+  from_status: string | null;
+  to_status: string;
+  reason: string | null;
+  created_at: string;
 }
 
 // Template

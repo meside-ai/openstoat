@@ -189,6 +189,24 @@ describe('task add and depend', () => {
     expect(addOut).toContain('Task created');
   });
 
+  test('task add with description and acceptance-criteria', () => {
+    const { stdout } = runOpenstoat(['plan', 'ls']);
+    const planId = stdout.trim().split('\n')[0]?.split('\t')[0];
+    if (!planId?.startsWith('plan_')) return;
+    const { stdout: addOut, code } = runOpenstoat([
+      'task', 'add', '--plan', planId, '--title', 'Test task', '--owner', 'ai',
+      '--description', 'Requirement desc', '--acceptance-criteria', 'AC: tests pass',
+    ]);
+    expect(code).toBe(0);
+    expect(addOut).toContain('Task created');
+    const taskId = addOut.match(/task_[a-z0-9]+/)?.[0];
+    if (taskId) {
+      const { stdout: showOut } = runOpenstoat(['task', 'show', taskId]);
+      expect(showOut).toContain('Requirement desc');
+      expect(showOut).toContain('AC: tests pass');
+    }
+  });
+
   test('task depend 添加依赖', () => {
     const { stdout } = runOpenstoat(['task', 'ls']);
     const lines = stdout.trim().split('\n').filter((l) => l.startsWith('task_'));
@@ -196,6 +214,27 @@ describe('task add and depend', () => {
     if (!task1 || !task2 || task1 === task2) return;
     const { code } = runOpenstoat(['task', 'depend', task1, '--on', task2]);
     expect(code).toBe(0);
+  });
+
+  test('task depend rejects cycle', () => {
+    const { stdout } = runOpenstoat(['task', 'ls']);
+    const lines = stdout.trim().split('\n').filter((l) => l.startsWith('task_'));
+    const [task1, task2] = lines.map((l) => l.split('\t')[0]?.trim()).filter(Boolean);
+    if (!task1 || !task2 || task1 === task2) return;
+    runOpenstoat(['task', 'depend', task1, '--on', task2]);
+    const { code, stderr } = runOpenstoat(['task', 'depend', task2, '--on', task1]);
+    expect(code).not.toBe(0);
+    expect(stderr).toContain('cycle');
+  });
+
+  test('need-human reason is persisted', () => {
+    const { stdout } = runOpenstoat(['task', 'ls']);
+    const taskId = stdout.trim().split('\n').find((l) => l.startsWith('task_'))?.split('\t')[0]?.trim();
+    if (!taskId) return;
+    runOpenstoat(['task', 'update', taskId, '--status', 'in_progress']);
+    runOpenstoat(['task', 'need-human', taskId, '--reason', '测试原因持久化']);
+    const { stdout: showOut } = runOpenstoat(['task', 'show', taskId]);
+    expect(showOut).toContain('测试原因持久化');
   });
 });
 
@@ -206,6 +245,18 @@ describe('handoff', () => {
     if (!taskId) return;
     const { code } = runOpenstoat(['handoff', 'ls', '--task', taskId]);
     expect(code).toBe(0);
+  });
+
+  test('handoff add 创建交接', () => {
+    const { stdout } = runOpenstoat(['task', 'ls']);
+    const lines = stdout.trim().split('\n').filter((l) => l.startsWith('task_'));
+    const [task1, task2] = lines.map((l) => l.split('\t')[0]?.trim()).filter(Boolean);
+    if (!task1 || !task2 || task1 === task2) return;
+    const { stdout: addOut, code } = runOpenstoat([
+      'handoff', 'add', '--from', task1, '--to', task2, '--summary', 'Test handoff',
+    ]);
+    expect(code).toBe(0);
+    expect(addOut).toContain('Handoff created');
   });
 });
 

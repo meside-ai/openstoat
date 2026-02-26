@@ -72,6 +72,8 @@ export function splitPlanToTasks(planText: string, template?: Template | null): 
       description: pt.description,
       owner,
       dependsOn: dependsOn.length ? dependsOn : undefined,
+      taskType,
+      priority: -pt.order,
     });
     taskIds.push(task.id);
     taskIdByOrder.push(task.id);

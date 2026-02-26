@@ -136,10 +136,10 @@ RULES & REFERENCE
   init       Initialize environment (run once)
   config     View/set config (e.g. agent name for daemon)
   plan       add / ls / show / rm / status
-  task       add / ls / show / done / update / need-human / depend
+  task       add / ls / show / done / update / reset / need-human / depend / events
   template   ls / show / add / rm / set-default
   daemon     start / stop / status / logs
-  handoff    ls / show
+  handoff    add / ls / show
   web        Start web UI server
 
   Every subcommand supports --help for detailed usage.

@@ -139,15 +139,17 @@ $ openstoat plan status <plan_id>         # 查看计划状态
 
 ```bash
 # Task 管理
-$ openstoat task add --plan <plan_id> --title "任务标题" --owner ai|human
+$ openstoat task add --plan <plan_id> --title "任务标题" --owner ai|human [--description] [--acceptance-criteria]
 $ openstoat task ls                       # 列出所有任务
 $ openstoat task ls --status ai_ready     # 按状态筛选
 $ openstoat task ls --owner human         # 按负责人筛选
-$ openstoat task show <task_id>           # 任务详情
-$ openstoat task done <task_id>           # 标记完成 (Human/AI)
-$ openstoat task update <task_id> --status <status>  # 更新状态 (Daemon 等)
-$ openstoat task need-human <task_id> --reason "原因"  # AI 升级为 Human
-$ openstoat task depend <task_id> --on <dep_task_id>  # 添加依赖
+$ openstoat task show <task_id> [--json]  # 任务详情
+$ openstoat task done <task_id> [--output '{"summary":"..."}']  # 标记完成，output 会创建 handoff
+$ openstoat task update <task_id> [--status] [--title] [--description] [--acceptance-criteria] [--priority]
+$ openstoat task reset <task_id>          # 重置 in_progress/waiting_human 为 ai_ready/pending
+$ openstoat task need-human <task_id> --reason "原因"  # AI 升级为 Human (reason 持久化)
+$ openstoat task depend <task_id> --on <dep_task_id>   # 添加依赖 (拒绝循环)
+$ openstoat task events <task_id>         # 查看任务状态变更历史
 ```
 
 ### 4.4 Template 命令
@@ -175,6 +177,7 @@ $ openstoat daemon logs                   # 查看日志
 
 ```bash
 # 交接记录
+$ openstoat handoff add --from <task_id> --to <task_id> --summary "..." [--artifacts '[...]']
 $ openstoat handoff ls --task <task_id>   # 查看任务的交接记录
 $ openstoat handoff show <handoff_id>     # 查看交接详情
 ```

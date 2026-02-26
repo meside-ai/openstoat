@@ -24,6 +24,7 @@ export function getDb(dbPath?: string): Database {
   }
   db = new Database(path);
   initSchema(db);
+  migrateSchema(db);
   return db;
 }
 
@@ -38,7 +39,38 @@ export function useTestDb(dbPath: string): Database {
   closeDb();
   db = new Database(dbPath);
   initSchema(db);
+  migrateSchema(db);
   return db;
+}
+
+function columnExists(database: Database, table: string, column: string): boolean {
+  const rows = database.query(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  return rows.some((r) => r.name === column);
+}
+
+function migrateSchema(database: Database): void {
+  const taskCols = [
+    { name: 'waiting_reason', def: 'TEXT' },
+    { name: 'task_type', def: "TEXT DEFAULT 'implementation'" },
+    { name: 'acceptance_criteria', def: 'TEXT' },
+    { name: 'priority', def: 'INTEGER DEFAULT 0' },
+  ];
+  for (const col of taskCols) {
+    if (!columnExists(database, 'tasks', col.name)) {
+      database.exec(`ALTER TABLE tasks ADD COLUMN ${col.name} ${col.def}`);
+    }
+  }
+
+  database.exec(`
+    CREATE TABLE IF NOT EXISTS task_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      task_id TEXT NOT NULL REFERENCES tasks(id),
+      from_status TEXT,
+      to_status TEXT NOT NULL,
+      reason TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
 }
 
 function initSchema(database: Database): void {
