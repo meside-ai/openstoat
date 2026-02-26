@@ -1,0 +1,12 @@
+{
+  "name": "openstoat-skills",
+  "version": "0.1.0",
+  "private": true,
+  "description": "OpenStoat agent skills for planner and worker roles",
+  "exports": {
+    ".": "./skills"
+  },
+  "files": [
+    "skills"
+  ]
+}

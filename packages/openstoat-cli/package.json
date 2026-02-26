@@ -13,6 +13,7 @@
   "dependencies": {
     "openstoat-core": "workspace:*",
     "openstoat-daemon": "workspace:*",
+    "openstoat-skills": "workspace:*",
     "openstoat-types": "workspace:*",
     "yargs": "^17.7.2"
   },

@@ -5,6 +5,7 @@
 
 import type { Argv } from 'yargs';
 import { startDaemon } from 'openstoat-daemon';
+import { installSkills } from '../lib/installSkills.js';
 
 export const daemonCommands = {
   command: 'daemon <action>',
@@ -22,6 +23,7 @@ export const daemonCommands = {
           }),
         handler: (argv: { 'poll-interval'?: number }) => {
           console.log('Daemon starting...');
+          installSkills(process.cwd());
           const pollInterval = (argv['poll-interval'] as number) || 5000;
           startDaemon(pollInterval);
         },

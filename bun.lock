@@ -18,6 +18,7 @@
       "dependencies": {
         "openstoat-core": "workspace:*",
         "openstoat-daemon": "workspace:*",
+        "openstoat-skills": "workspace:*",
         "openstoat-types": "workspace:*",
         "yargs": "^17.7.2",
       },
@@ -49,6 +50,10 @@
         "@types/bun": "latest",
         "typescript": "^5.0.0",
       },
+    },
+    "packages/openstoat-skills": {
+      "name": "openstoat-skills",
+      "version": "0.1.0",
     },
     "packages/openstoat-types": {
       "name": "openstoat-types",
@@ -105,6 +110,8 @@
     "openstoat-core": ["openstoat-core@workspace:packages/openstoat-core"],
 
     "openstoat-daemon": ["openstoat-daemon@workspace:packages/openstoat-daemon"],
+
+    "openstoat-skills": ["openstoat-skills@workspace:packages/openstoat-skills"],
 
     "openstoat-types": ["openstoat-types@workspace:packages/openstoat-types"],
 

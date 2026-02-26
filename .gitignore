@@ -1,5 +1,7 @@
 node_modules/
 .openstoat.json
+.agent/
+.claude/
 *.db
 .DS_Store
 packages/*/dist
