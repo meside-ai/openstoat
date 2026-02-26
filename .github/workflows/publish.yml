@@ -36,7 +36,9 @@ jobs:
       - name: Publish packages to npm
         run: |
           # Publish in dependency order (types -> core -> daemon -> skills -> cli)
-          # Uses OIDC - npm CLI auto-detects GitHub Actions and authenticates
+          # First publish: use NPM_TOKEN. After packages exist, switch to Trusted Publishing (OIDC).
           for pkg in openstoat-types openstoat-core openstoat-daemon openstoat-skills openstoat-cli; do
             (cd packages/$pkg && npm publish --access public)
           done
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
