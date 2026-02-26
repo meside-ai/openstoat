@@ -10,22 +10,70 @@ import {
 } from '@openstoat/core';
 import type { TaskStatus, TaskOwner } from '@openstoat/types';
 
+const TASK_EPILOG = `
+Task is the smallest unit of work, owned by ai or human. Completing a task triggers downstream
+dependent tasks to become ai_ready.
+
+## Subcommands
+
+add              Manually add task; requires --plan, --title, --owner
+
+ls               List tasks; supports filters:
+                 --status: pending|ai_ready|in_progress|waiting_human|human_done|done
+                 --owner: ai|human
+                 --plan: plan_id
+                 --json: output JSON
+
+show <task_id>   Show task details
+
+done <task_id>   Mark done, trigger downstream tasks
+
+update <task_id> Update status; requires --status
+
+need-human <task_id>  Escalate AI task to human; optional --reason
+
+depend <task_id> Add dependency; requires --on <dep_task_id> (task_id depends on dep_task_id)
+
+## Status flow
+
+  pending -> ai_ready (deps done and owner=ai)
+  ai_ready -> in_progress (started)
+  in_progress -> done (complete) or waiting_human (needs human)
+  waiting_human -> human_done (human completed)
+  human_done -> done (confirmed)
+
+## Common usage
+
+  openstoat task ls --status ai_ready     List executable AI tasks
+  openstoat task done task_xxx            Complete task, trigger downstream
+  openstoat task need-human task_xxx --reason "needs review"  Escalate to human
+`;
+
 export const taskCmd = {
   command: 'task <action> [taskId..]',
-  describe: 'Task management',
+  describe: 'Task management: add, list, complete, update tasks; status filters and dependencies',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .positional('action', {
         type: 'string',
         choices: ['add', 'ls', 'show', 'done', 'update', 'need-human', 'depend'],
+        describe: 'add/ls/show/done/update/need-human/depend',
       })
-      .option('plan', { type: 'string', describe: 'Plan ID' })
-      .option('title', { type: 'string', describe: 'Task title' })
-      .option('owner', { type: 'string', choices: ['ai', 'human'], describe: 'Owner' })
-      .option('status', { type: 'string', describe: 'Task status' })
-      .option('reason', { type: 'string', describe: 'Reason for needing human' })
-      .option('on', { type: 'string', describe: 'Dependency task ID' })
-      .option('json', { type: 'boolean', describe: 'JSON output' }),
+      .option('plan', { type: 'string', describe: 'Plan ID; required for add; filter for ls' })
+      .option('title', { type: 'string', describe: 'Task title; required for add' })
+      .option('owner', { type: 'string', choices: ['ai', 'human'], describe: 'Task owner; required for add; filter for ls' })
+      .option('status', { type: 'string', describe: 'Task status; required for update; filter for ls' })
+      .option('reason', { type: 'string', describe: 'Optional for need-human; why human is needed' })
+      .option('on', { type: 'string', describe: 'Required for depend; ID of task to depend on' })
+      .option('json', { type: 'boolean', describe: 'Output JSON for ls' })
+      .example('$0 task ls', 'List all tasks')
+      .example('$0 task ls --status ai_ready', 'List executable AI tasks')
+      .example('$0 task ls --json', 'JSON output')
+      .example('$0 task done task_xxx', 'Complete task, trigger downstream')
+      .example('$0 task add --plan plan_xxx --title "Implement feature" --owner ai', 'Manually add task')
+      .example('$0 task need-human task_xxx --reason "needs code review"', 'Escalate to human')
+      .example('$0 task depend task_a --on task_b', 'task_a depends on task_b')
+      .epilog(TASK_EPILOG),
   handler: (argv: ArgumentsCamelCase<{
     action: string;
     taskId?: string[];

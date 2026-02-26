@@ -17,14 +17,43 @@ function getDaemonPath(): string {
   }
 }
 
+const DAEMON_EPILOG = `
+Daemon is a background process that auto-schedules ai_ready AI tasks. Runs in background, polling and executing.
+
+## Subcommands
+
+start   Start daemon in background
+stop    Stop daemon
+status  Check if daemon is running
+logs    View daemon logs (written to daemon.log in data dir)
+
+## How it works
+
+- Daemon polls for ai_ready tasks periodically
+- Configure external agent via config set agent <path>
+- PID stored in daemon.pid in data dir
+
+## Notes
+
+- start skips if already running
+- stop sends SIGTERM for graceful shutdown
+`;
+
 export const daemonCmd = {
   command: 'daemon <action>',
-  describe: 'Daemon process',
+  describe: 'Background daemon: auto-schedule ai_ready AI tasks for unattended execution',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
-    yargs.positional('action', {
-      type: 'string',
-      choices: ['start', 'stop', 'status', 'logs'],
-    }),
+    yargs
+      .positional('action', {
+        type: 'string',
+        choices: ['start', 'stop', 'status', 'logs'],
+        describe: 'start/stop/status/logs',
+      })
+      .example('$0 daemon start', 'Start background daemon')
+      .example('$0 daemon status', 'Check running status')
+      .example('$0 daemon logs', 'View logs')
+      .example('$0 daemon stop', 'Stop daemon')
+      .epilog(DAEMON_EPILOG),
   handler: (argv: ArgumentsCamelCase<{ action: string }>) => {
     switch (argv.action) {
       case 'start': {

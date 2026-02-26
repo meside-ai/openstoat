@@ -36,7 +36,7 @@ export function createTask(params: {
 export function listTasks(filters?: { status?: TaskStatus; owner?: TaskOwner; planId?: string }): Task[] {
   const db = getDb();
   let query = 'SELECT * FROM tasks WHERE 1=1';
-  const args: unknown[] = [];
+  const args: (string | number | null)[] = [];
   if (filters?.status) {
     query += ' AND status = ?';
     args.push(filters.status);

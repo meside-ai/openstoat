@@ -78,6 +78,15 @@ Run `openstoat --help` for full usage.
 
 More features and polish are coming. Contributions welcome.
 
+## Local test
+
+```
+bun install
+bun run packages/openstoat-cli/src/index.ts --help
+bun run packages/openstoat-cli/src/index.ts init
+bun run packages/openstoat-cli/src/index.ts task ls
+```
+
 ## License
 
 MIT

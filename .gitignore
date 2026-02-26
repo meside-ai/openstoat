@@ -2,3 +2,4 @@ node_modules/
 .openstoat.json
 *.db
 .DS_Store
+packages/*/dist

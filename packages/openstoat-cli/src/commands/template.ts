@@ -8,20 +8,62 @@ import {
 } from '@openstoat/core';
 import { readFileSync } from 'fs';
 
+const TEMPLATE_EPILOG = `
+Template defines workflow rules: which task types require human input. plan add uses the default
+template to match task types (via keywords) and assign owner (ai/human).
+
+## Subcommands
+
+ls                 List all templates; default is marked (default)
+
+show <template_id> Show full template JSON (rules, keywords)
+
+add                Add template from JSON file; requires -f <file>
+
+rm <template_id>   Delete template
+
+set-default <template_id>  Set as default; used by plan add
+
+## Template JSON format
+
+  {
+    "name": "My Workflow",
+    "version": "1.0",
+    "rules": [
+      { "task_type": "credentials", "requires_human": true, "human_action": "provide_input", "prompt": "Provide {field}" },
+      { "task_type": "code_review", "requires_human": true },
+      { "task_type": "implementation", "requires_human": false }
+    ],
+    "keywords": {
+      "credentials": ["api_key", "secret", "API Key"],
+      "code_review": ["review", "code review"]
+    }
+  }
+
+  rules:    Whether each task_type requires human
+  keywords: Task title/description matches keywords → maps to task_type
+`;
+
 export const templateCmd = {
   command: 'template <action> [id..]',
-  describe: 'Template management',
+  describe: 'Workflow template management: define which task types need human; plan add uses default',
   builder: (yargs: ReturnType<typeof import('yargs')>) =>
     yargs
       .positional('action', {
         type: 'string',
         choices: ['ls', 'show', 'add', 'rm', 'set-default'],
+        describe: 'ls/show/add/rm/set-default',
       })
       .option('f', {
         alias: 'file',
         type: 'string',
-        describe: 'Template JSON file path',
-      }),
+        describe: 'Required for add; path to template JSON file',
+      })
+      .example('$0 template ls', 'List all templates')
+      .example('$0 template show template_default', 'Show default template')
+      .example('$0 template add -f my-template.json', 'Add template from file')
+      .example('$0 template set-default template_xxx', 'Set as default template')
+      .epilog(TEMPLATE_EPILOG),
   handler: (argv: ArgumentsCamelCase<{ action: string; id?: string[]; f?: string }>) => {
     const ids = argv.id ?? [];
     const id = ids[0];
