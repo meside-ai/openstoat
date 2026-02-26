@@ -14,7 +14,7 @@ export const installCommands = {
       .command({
         command: 'skill',
         describe:
-          'Install planner and worker skills. Use --here to install to ./skills in current directory (no .agent/.claude).',
+          'Install planner and worker skills. Use --here to install to current directory (no skills/, .agent, or .claude).',
         builder: (y: Argv) =>
           y
             .option('cwd', {
@@ -25,7 +25,7 @@ export const installCommands = {
             .option('here', {
               type: 'boolean',
               default: false,
-              describe: 'Install to ./skills in current directory (no .agent or .claude parent dirs)',
+              describe: 'Install to current directory (./openstoat-planner, ./openstoat-worker)',
             }),
         handler: (argv: { cwd?: string; here?: boolean }) => {
           const targetRoot = (argv.cwd as string) || process.cwd();

@@ -12,7 +12,7 @@ const require = createRequire(import.meta.url);
 
 const SKILL_NAMES = ['openstoat-planner', 'openstoat-worker'];
 const TARGET_DIRS_DEFAULT = ['.agent/skills', '.claude/skills'];
-const TARGET_DIRS_HERE = ['skills'];
+const TARGET_DIRS_HERE = [''];
 
 /**
  * Get the path to the openstoat-skills package skills directory.
@@ -40,14 +40,14 @@ function copySkill(source: string, dest: string): void {
 }
 
 export interface InstallSkillsOptions {
-  /** When true, install to ./skills only (no .agent or .claude parent dirs) */
+  /** When true, install to current directory (no skills/, .agent, or .claude) */
   here?: boolean;
 }
 
 /**
- * Install OpenStoat skills to .agent/skills and .claude/skills, or ./skills when here=true.
+ * Install OpenStoat skills to .agent/skills and .claude/skills, or current dir when here=true.
  * @param targetRoot - Root directory (default: process.cwd())
- * @param options - { here: true } to install to ./skills in current directory
+ * @param options - { here: true } to install to current directory (./openstoat-planner, ./openstoat-worker)
  * @returns Paths where skills were installed
  */
 export function installSkills(

@@ -6,7 +6,7 @@
 import { describe, test, expect, beforeEach, afterEach } from 'bun:test';
 import { spawnSync } from 'child_process';
 import { join } from 'path';
-import { mkdtempSync, rmSync } from 'fs';
+import { mkdtempSync, rmSync, existsSync } from 'fs';
 import { tmpdir } from 'os';
 
 const CLI_PATH = join(import.meta.dir, '../../packages/openstoat-cli/dist/index.js');
@@ -325,6 +325,45 @@ describe('OpenStoat Integration', () => {
       // Self-unblock with no depends_on (missing)
       const r = runOpenstoat(['task', 'self-unblock', 'task_001', '--depends-on']);
       expect(r.exitCode).not.toBe(0);
+    });
+  });
+
+  describe('install skill', () => {
+    test('default: installs to .agent/skills and .claude/skills', () => {
+      const installDir = mkdtempSync(join(tmpdir(), 'openstoat-install-'));
+      try {
+        const r = runOpenstoat(['install', 'skill', '--cwd', installDir]);
+        expect(r.exitCode).toBe(0);
+        expect(r.stdout).toContain('Installed skills to:');
+        expect(r.stdout).toContain('openstoat-planner');
+        expect(r.stdout).toContain('openstoat-worker');
+
+        expect(existsSync(join(installDir, '.agent/skills/openstoat-planner/SKILL.md'))).toBe(true);
+        expect(existsSync(join(installDir, '.agent/skills/openstoat-worker/SKILL.md'))).toBe(true);
+        expect(existsSync(join(installDir, '.claude/skills/openstoat-planner/SKILL.md'))).toBe(true);
+        expect(existsSync(join(installDir, '.claude/skills/openstoat-worker/SKILL.md'))).toBe(true);
+      } finally {
+        rmSync(installDir, { recursive: true, force: true });
+      }
+    });
+
+    test('--here: installs to current directory (no skills/, .agent, or .claude)', () => {
+      const installDir = mkdtempSync(join(tmpdir(), 'openstoat-install-here-'));
+      try {
+        const r = runOpenstoat(['install', 'skill', '--here', '--cwd', installDir]);
+        expect(r.exitCode).toBe(0);
+        expect(r.stdout).toContain('Installed skills to:');
+        expect(r.stdout).toContain('openstoat-planner');
+        expect(r.stdout).toContain('openstoat-worker');
+
+        expect(existsSync(join(installDir, 'openstoat-planner/SKILL.md'))).toBe(true);
+        expect(existsSync(join(installDir, 'openstoat-worker/SKILL.md'))).toBe(true);
+        expect(existsSync(join(installDir, 'skills'))).toBe(false);
+        expect(existsSync(join(installDir, '.agent'))).toBe(false);
+        expect(existsSync(join(installDir, '.claude'))).toBe(false);
+      } finally {
+        rmSync(installDir, { recursive: true, force: true });
+      }
     });
   });
 });
