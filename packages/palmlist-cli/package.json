@@ -1,6 +1,6 @@
 {
   "name": "palmlist",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "AI and Human task queue - orchestrate work between AI agents and humans with a local-first CLI",
   "bin": {
     "palmlist": "./bin/palmlist"
