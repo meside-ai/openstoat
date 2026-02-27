@@ -1,0 +1,53 @@
+{
+  "id": "openstoat-openclaw-plugin",
+  "name": "OpenStoat",
+  "description": "Integrate OpenClaw with OpenStoat task orchestration. Create, list, and manage tasks; route development work to OpenStoat agents.",
+  "version": "0.1.0",
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "connectionMode": {
+        "type": "string",
+        "enum": ["cli", "api"],
+        "default": "cli",
+        "description": "How to call OpenStoat: cli (spawn) or api (future)"
+      },
+      "cliPath": {
+        "type": "string",
+        "default": "openstoat",
+        "description": "Path to openstoat binary"
+      },
+      "defaultProject": {
+        "type": "string",
+        "description": "Default project ID for new tasks"
+      },
+      "forceDevTasksToOpenstoat": {
+        "type": "boolean",
+        "default": true,
+        "description": "Force all development tasks through OpenStoat"
+      },
+      "allowFallback": {
+        "type": "boolean",
+        "default": false,
+        "description": "Allow local execution when OpenStoat fails"
+      },
+      "pollInterval": {
+        "type": "number",
+        "default": 30,
+        "description": "Background poll interval in seconds (0 for disabled)"
+      }
+    }
+  },
+  "uiHints": {
+    "cliPath": {
+      "label": "OpenStoat CLI Path",
+      "placeholder": "openstoat"
+    },
+    "defaultProject": {
+      "label": "Default Project ID",
+      "placeholder": "my-project"
+    }
+  },
+  "skills": ["skills/openstoat-skill"]
+}
