@@ -35,9 +35,9 @@ jobs:
 
       - name: Publish packages to npm
         run: |
-          # Publish in dependency order (types -> core -> daemon -> skills -> cli)
-          # First publish: use NPM_TOKEN. After packages exist, switch to Trusted Publishing (OIDC).
-          for pkg in palmlist-types palmlist-core palmlist-daemon palmlist-skills palmlist-cli; do
+          # Publish in dependency order (types -> core -> daemon -> skills -> web -> cli)
+          # palmlist (CLI) depends on palmlist-web, so web must be published first.
+          for pkg in palmlist-types palmlist-core palmlist-daemon palmlist-skills palmlist-web palmlist-cli; do
             (cd packages/$pkg && npm publish --access public)
           done
         env:
