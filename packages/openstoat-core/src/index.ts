@@ -4,7 +4,12 @@
 
 export { getDb, getDbPath, setDbPath, closeDb } from './db.js';
 export { loadProjectConfig, saveProjectConfig, type OpenstoatConfig } from './projectConfig.js';
-export { createProject, getProject, listProjects } from './project.js';
+export {
+  createProject,
+  getProject,
+  listProjects,
+  updateProjectWorkflowInstructions,
+} from './project.js';
 export {
   createTask,
   getTask,

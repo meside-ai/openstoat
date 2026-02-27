@@ -146,7 +146,8 @@ Workers cannot:
         "task_type": "implementation",
         "default_owner": "agent_worker"
       }
-    ]
+    ],
+    "workflow_instructions": "Optional super prompt guiding task splitting, prerequisites, and finish steps. Agent Planner uses this when creating tasks."
   },
   "status": "active | archived",
   "created_at": "2026-02-26T10:00:00Z",

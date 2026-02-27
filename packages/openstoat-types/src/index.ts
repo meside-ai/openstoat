@@ -30,6 +30,8 @@ export interface TemplateRule {
 export interface TemplateContext {
   version: string;
   rules: TemplateRule[];
+  /** Optional super prompt guiding task splitting, prerequisites, and finish steps. */
+  workflow_instructions?: string;
 }
 
 export interface Project {

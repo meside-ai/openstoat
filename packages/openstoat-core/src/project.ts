@@ -5,14 +5,22 @@
 import { getDb } from './db.js';
 import type { Project, TemplateContext } from 'openstoat-types';
 
+export interface CreateProjectOptions {
+  workflow_instructions?: string;
+}
+
 export function createProject(
   id: string,
   name: string,
-  template: string
+  template: string,
+  options?: CreateProjectOptions
 ): Project {
   const templateContext: TemplateContext = {
     version: '1.0',
     rules: getTemplateRules(template),
+    ...(options?.workflow_instructions !== undefined && {
+      workflow_instructions: options.workflow_instructions,
+    }),
   };
 
   const db = getDb();
@@ -29,6 +37,32 @@ export function createProject(
     template_context: templateContext,
     status: 'active',
     created_at: now,
+    updated_at: now,
+  };
+}
+
+export function updateProjectWorkflowInstructions(
+  projectId: string,
+  workflowInstructions: string
+): Project | null {
+  const project = getProject(projectId);
+  if (!project) return null;
+
+  const updatedContext: TemplateContext = {
+    ...project.template_context,
+    workflow_instructions: workflowInstructions,
+  };
+
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  db.query(
+    `UPDATE projects SET template_context = ?, updated_at = ? WHERE id = ?`
+  ).run(JSON.stringify(updatedContext), now, projectId);
+
+  return {
+    ...project,
+    template_context: updatedContext,
     updated_at: now,
   };
 }

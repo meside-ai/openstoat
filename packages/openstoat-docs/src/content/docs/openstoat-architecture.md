@@ -316,7 +316,7 @@ Task status flow:
 CREATE TABLE projects (
   id TEXT PRIMARY KEY,
   name TEXT NOT NULL,
-  template_context TEXT NOT NULL,  -- JSON: { version, rules: [{ task_type, default_owner }] }
+  template_context TEXT NOT NULL,  -- JSON: { version, rules: [{ task_type, default_owner }], workflow_instructions?: string }
   status TEXT DEFAULT 'active' CHECK(status IN ('active', 'archived')),
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
@@ -382,7 +382,8 @@ $ npm install -g openstoat
 
 # Usage
 $ openstoat --help
-$ openstoat project init --id my_project --name "My Project" --template default-v1
+$ openstoat project init --id my_project --name "My Project" --template default-v1 [--workflow-instructions "text"]
+$ openstoat project update my_project --workflow-instructions "text"
 $ openstoat task ls --project my_project --status ready,in_progress
 $ openstoat daemon start
 ```

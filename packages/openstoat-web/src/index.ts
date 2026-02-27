@@ -76,7 +76,7 @@ function renderTaskCard(t: Task): string {
   const backUrl = '/';
   return `<div class="task-card"${tooltipAttr}>
     <a href="/task/${escapeHtml(t.id)}" class="task-link"><span class="task-id">${escapeHtml(t.id)}</span> [${t.owner}] ${escapeHtml(t.title)}</a>
-    ${hasTooltip ? '<div class="task-preview">' + escapeHtml((t.description || '').slice(0, 80)) + (t.description && t.description.length > 80 ? '...' : '') + '</div>' : ''}
+    ${hasTooltip ? '<div class="task-preview">' + escapeHtml(t.description || '') + '</div>' : ''}
   </div>`;
 }
 
@@ -203,9 +203,13 @@ function renderHtml(filters: FilterParams, projects: Project[], tasks: Task[], h
     ${projects.length === 0 ? '<p>No projects.</p>' : projects.map((p) => {
       const tc = p.template_context;
       const rulesDesc = tc.rules.map((r) => `${r.task_type}→${r.default_owner}`).join(', ');
+      const workflowContent = tc.workflow_instructions
+        ? escapeHtml(tc.workflow_instructions)
+        : null;
       return `<div class="project-card">
         <strong>${escapeHtml(p.name)}</strong> (${escapeHtml(p.id)}) — ${p.status}
         <div class="template-context">Template v${escapeHtml(tc.version)}: ${escapeHtml(rulesDesc)}</div>
+        ${workflowContent ? `<div class="workflow-instructions">Workflow: ${workflowContent}</div>` : ''}
       </div>`;
     }).join('')}
   </div>
@@ -228,7 +232,7 @@ function renderHtml(filters: FilterParams, projects: Project[], tasks: Task[], h
 
   <h2>Handoffs</h2>
   <div class="handoff-list">
-    ${handoffs.length === 0 ? '<p>No handoffs.</p>' : handoffs.map((h) => `<div class="handoff-card"><span class="task-id">${escapeHtml(h.id)}</span> ${escapeHtml(h.from_task_id)} → ${h.to_task_id ? escapeHtml(h.to_task_id) : 'audit'}<div class="summary">${escapeHtml(h.summary.slice(0, 200))}${h.summary.length > 200 ? '...' : ''}</div></div>`).join('')}
+    ${handoffs.length === 0 ? '<p>No handoffs.</p>' : handoffs.map((h) => `<div class="handoff-card"><span class="task-id">${escapeHtml(h.id)}</span> ${escapeHtml(h.from_task_id)} → ${h.to_task_id ? escapeHtml(h.to_task_id) : 'audit'}<div class="summary">${escapeHtml(h.summary)}</div></div>`).join('')}
   </div>
 </body>
 </html>`;
@@ -316,7 +320,7 @@ function renderTaskDetailPage(task: Task, projects: Project[], error?: string): 
     ${task.logs?.length ? task.logs.map((l) => `<div class="log-item">${escapeHtml(l)}</div>`).join('') : '<p><em>No logs</em></p>'}
   </div>
 
-  ${handoffsFrom.length ? `<div class="detail-section"><h3>Handoffs from this task</h3>${handoffsFrom.map((h) => `<div class="log-item">→ ${h.to_task_id || 'audit'}: ${escapeHtml(h.summary.slice(0, 150))}...</div>`).join('')}</div>` : ''}
+  ${handoffsFrom.length ? `<div class="detail-section"><h3>Handoffs from this task</h3>${handoffsFrom.map((h) => `<div class="log-item">→ ${h.to_task_id || 'audit'}: ${escapeHtml(h.summary)}</div>`).join('')}</div>` : ''}
 </body>
 </html>`;
 }
