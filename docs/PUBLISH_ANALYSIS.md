@@ -1,34 +1,32 @@
 # npm Publish Failure Analysis
 
+## Root Cause (Resolved)
+
+**Version conflict**: The workflow was trying to publish versions that already existed on npm.
+When pushing tag v0.2.7, package.json still had version 0.2.5. npm rejects "Cannot publish over
+previously published version" (EPUBLISHCONFLICT).
+
+## Fix Applied
+
+1. **Set version from tag** — Before publish, extract version from git tag (e.g. v0.2.8 → 0.2.8)
+   and update all package.json files. Ensures each tag publishes unique versions.
+
+2. **Add palmlist-web to publish workflow** — palmlist (CLI) depends on it; web must be published first.
+
+3. **Publish order**: types → core → daemon → skills → web → cli
+
 ## Current Status
 
-| Package | On npm? | Version |
-|---------|---------|---------|
-| palmlist-types | ✅ Yes | 0.2.4, 0.2.5 |
-| palmlist-core | ✅ Yes | 0.2.4, 0.2.5 |
-| palmlist-daemon | ✅ Yes | 0.2.4, 0.2.5 |
-| palmlist-skills | ✅ Yes | 0.2.4, 0.2.5 |
-| palmlist-web | ❌ No | (private) |
-| **palmlist** (CLI) | ❌ No | - |
-
-## Root Cause
-
-**palmlist** (CLI) depends on **palmlist-web**, but palmlist-web is:
-1. Marked `"private": true` — cannot be published
-2. Not in the publish workflow
-
-When the workflow tries to publish palmlist (the 5th package), it fails because:
-- Either npm validates that dependencies exist on the registry (palmlist-web doesn't)
-- Or the publish succeeds but would create a broken package (users couldn't `npm install palmlist`)
+| Package | On npm? |
+|---------|---------|
+| palmlist-types | ✅ |
+| palmlist-core | ✅ |
+| palmlist-daemon | ✅ |
+| palmlist-skills | ✅ |
+| palmlist-web | After fix |
+| palmlist (CLI) | After fix |
 
 ## Secondary Issue: workspace:* Not Converted
 
-Published packages on npm show `"palmlist-core": "workspace:*"` instead of `"^0.2.5"`.
-Bun/npm does not auto-convert workspace protocol during publish (unlike pnpm).
-This may cause install issues for consumers.
-
-## Fix
-
-1. **Add palmlist-web to publish workflow** — remove `private: true`, publish it
-2. **Publish order**: types → core → daemon → skills → **web** → cli
-3. **Optional**: Add a prepublish script to convert workspace:* to actual versions (or use pnpm for publish)
+Published packages may show `"palmlist-core": "workspace:*"` instead of semver.
+Bun/npm does not auto-convert during publish (unlike pnpm). May cause install issues.
