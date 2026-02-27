@@ -3,24 +3,24 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "openstoat",
+      "name": "palmlist",
       "devDependencies": {
         "@types/bun": "latest",
         "typescript": "^5.0.0",
       },
     },
-    "packages/openstoat-cli": {
-      "name": "openstoat",
-      "version": "0.2.2",
+    "packages/palmlist-cli": {
+      "name": "palmlist",
+      "version": "0.2.4",
       "bin": {
-        "openstoat": "./bin/openstoat",
+        "palmlist": "./bin/palmlist",
       },
       "dependencies": {
-        "openstoat-core": "workspace:*",
-        "openstoat-daemon": "workspace:*",
-        "openstoat-skills": "workspace:*",
-        "openstoat-types": "workspace:*",
-        "openstoat-web": "workspace:*",
+        "palmlist-core": "workspace:*",
+        "palmlist-daemon": "workspace:*",
+        "palmlist-skills": "workspace:*",
+        "palmlist-types": "workspace:*",
+        "palmlist-web": "workspace:*",
         "yargs": "^17.7.2",
       },
       "devDependencies": {
@@ -30,30 +30,30 @@
         "typescript": "^5.0.0",
       },
     },
-    "packages/openstoat-core": {
-      "name": "openstoat-core",
-      "version": "0.2.2",
+    "packages/palmlist-core": {
+      "name": "palmlist-core",
+      "version": "0.2.4",
       "dependencies": {
-        "openstoat-types": "workspace:*",
+        "palmlist-types": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
         "typescript": "^5.0.0",
       },
     },
-    "packages/openstoat-daemon": {
-      "name": "openstoat-daemon",
-      "version": "0.2.2",
+    "packages/palmlist-daemon": {
+      "name": "palmlist-daemon",
+      "version": "0.2.4",
       "dependencies": {
-        "openstoat-core": "workspace:*",
+        "palmlist-core": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
         "typescript": "^5.0.0",
       },
     },
-    "packages/openstoat-docs": {
-      "name": "openstoat-docs",
+    "packages/palmlist-docs": {
+      "name": "palmlist-docs",
       "version": "0.1.0",
       "dependencies": {
         "@astrojs/react": "^4.4.2",
@@ -72,23 +72,23 @@
         "typescript": "^5.0.0",
       },
     },
-    "packages/openstoat-skills": {
-      "name": "openstoat-skills",
-      "version": "0.2.2",
+    "packages/palmlist-skills": {
+      "name": "palmlist-skills",
+      "version": "0.2.4",
     },
-    "packages/openstoat-types": {
-      "name": "openstoat-types",
-      "version": "0.2.2",
+    "packages/palmlist-types": {
+      "name": "palmlist-types",
+      "version": "0.2.4",
       "devDependencies": {
         "typescript": "^5.0.0",
       },
     },
-    "packages/openstoat-web": {
-      "name": "openstoat-web",
+    "packages/palmlist-web": {
+      "name": "palmlist-web",
       "version": "0.1.0",
       "dependencies": {
-        "openstoat-core": "workspace:*",
-        "openstoat-types": "workspace:*",
+        "palmlist-core": "workspace:*",
+        "palmlist-types": "workspace:*",
       },
       "devDependencies": {
         "@types/bun": "latest",
@@ -780,20 +780,6 @@
 
     "oniguruma-to-es": ["oniguruma-to-es@4.3.4", "", { "dependencies": { "oniguruma-parser": "^0.12.1", "regex": "^6.0.1", "regex-recursion": "^6.0.2" } }, "sha512-3VhUGN3w2eYxnTzHn+ikMI+fp/96KoRSVK9/kMTcFqj1NRDh2IhQCKvYxDnWePKRXY/AqH+Fuiyb7VHSzBjHfA=="],
 
-    "openstoat": ["openstoat@workspace:packages/openstoat-cli"],
-
-    "openstoat-core": ["openstoat-core@workspace:packages/openstoat-core"],
-
-    "openstoat-daemon": ["openstoat-daemon@workspace:packages/openstoat-daemon"],
-
-    "openstoat-docs": ["openstoat-docs@workspace:packages/openstoat-docs"],
-
-    "openstoat-skills": ["openstoat-skills@workspace:packages/openstoat-skills"],
-
-    "openstoat-types": ["openstoat-types@workspace:packages/openstoat-types"],
-
-    "openstoat-web": ["openstoat-web@workspace:packages/openstoat-web"],
-
     "p-limit": ["p-limit@6.2.0", "", { "dependencies": { "yocto-queue": "^1.1.1" } }, "sha512-kuUqqHNUqoIWp/c467RI4X6mmyuojY5jGutNU0wVTmEOOfcuwLqyMVoAi9MKi2Ak+5i9+nhmrK4ufZE8069kHA=="],
 
     "p-queue": ["p-queue@8.1.1", "", { "dependencies": { "eventemitter3": "^5.0.1", "p-timeout": "^6.1.2" } }, "sha512-aNZ+VfjobsWryoiPnEApGGmf5WmNsCo9xu8dfaYamG5qaLP7ClhLN6NgsFe6SwJ2UbLEBK5dv9x8Mn5+RVhMWQ=="],
@@ -801,6 +787,20 @@
     "p-timeout": ["p-timeout@6.1.4", "", {}, "sha512-MyIV3ZA/PmyBN/ud8vV9XzwTrNtR4jFrObymZYnZqMmW0zA8Z17vnT0rBgFE/TlohB+YCHqXMgZzb3Csp49vqg=="],
 
     "package-manager-detector": ["package-manager-detector@1.6.0", "", {}, "sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA=="],
+
+    "palmlist": ["palmlist@workspace:packages/palmlist-cli"],
+
+    "palmlist-core": ["palmlist-core@workspace:packages/palmlist-core"],
+
+    "palmlist-daemon": ["palmlist-daemon@workspace:packages/palmlist-daemon"],
+
+    "palmlist-docs": ["palmlist-docs@workspace:packages/palmlist-docs"],
+
+    "palmlist-skills": ["palmlist-skills@workspace:packages/palmlist-skills"],
+
+    "palmlist-types": ["palmlist-types@workspace:packages/palmlist-types"],
+
+    "palmlist-web": ["palmlist-web@workspace:packages/palmlist-web"],
 
     "parse-entities": ["parse-entities@4.0.2", "", { "dependencies": { "@types/unist": "^2.0.0", "character-entities-legacy": "^3.0.0", "character-reference-invalid": "^2.0.0", "decode-named-character-reference": "^1.0.0", "is-alphanumerical": "^2.0.0", "is-decimal": "^2.0.0", "is-hexadecimal": "^2.0.0" } }, "sha512-GG2AQYWoLgL877gQIKeRPGO1xF9+eG1ujIb5soS5gPvLQ1y2o8FL90w2QWNdf9I361Mpp7726c+lj3U0qK1uGw=="],
 

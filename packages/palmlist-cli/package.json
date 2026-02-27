@@ -1,0 +1,27 @@
+{
+  "name": "palmlist",
+  "version": "0.2.4",
+  "description": "AI and Human task queue - orchestrate work between AI agents and humans with a local-first CLI",
+  "bin": {
+    "palmlist": "./bin/palmlist"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "start": "bun run src/index.ts"
+  },
+  "dependencies": {
+    "palmlist-core": "workspace:*",
+    "palmlist-daemon": "workspace:*",
+    "palmlist-skills": "workspace:*",
+    "palmlist-types": "workspace:*",
+    "palmlist-web": "workspace:*",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0",
+    "@types/yargs": "^17.0.35",
+    "typescript": "^5.0.0"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "palmlist-skills",
+  "version": "0.2.4",
+  "description": "Palmlist agent skills for planner and worker roles",
+  "exports": {
+    ".": "./skills"
+  },
+  "files": [
+    "skills"
+  ]
+}

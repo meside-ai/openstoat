@@ -1,4 +1,4 @@
-# Publish openstoat CLI to npm on git tag push
+# Publish palmlist CLI to npm on git tag push
 # Uses npm Trusted Publishing (OIDC) - no NPM_TOKEN secret needed
 # https://docs.npmjs.com/trusted-publishers
 name: Publish to npm
@@ -37,7 +37,7 @@ jobs:
         run: |
           # Publish in dependency order (types -> core -> daemon -> skills -> cli)
           # First publish: use NPM_TOKEN. After packages exist, switch to Trusted Publishing (OIDC).
-          for pkg in openstoat-types openstoat-core openstoat-daemon openstoat-skills openstoat-cli; do
+          for pkg in palmlist-types palmlist-core palmlist-daemon palmlist-skills palmlist-cli; do
             (cd packages/$pkg && npm publish --access public)
           done
         env:

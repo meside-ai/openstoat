@@ -1,4 +1,5 @@
 node_modules/
+.palmlist.json
 .openstoat.json
 .agent/
 .claude/

@@ -1,3 +1,7 @@
+---
+title: Palmlist Development Conventions
+---
+
 # Palmlist Development Conventions
 
 Development customs and conventions for this project.
@@ -5,6 +9,10 @@ Development customs and conventions for this project.
 ## Documentation & Comments
 
 - **All documentation and code comments MUST be written in English.**
+
+:::tip
+Use `:::tip`, `:::note`, `:::warning`, `:::danger`, or `:::info` in markdown for GitBook-style callout blocks.
+:::
 - This is an open-source project; English ensures accessibility for international contributors.
 - User-facing help text (CLI epilog, examples) should also be in English.
 

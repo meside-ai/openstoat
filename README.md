@@ -1,4 +1,4 @@
-# OpenStoat
+# Palmlist
 
 > AI ↔ Human task queue system
 
@@ -7,7 +7,7 @@ A decoupled task queue that coordinates AI agents and humans. AI handles tasks t
 ## Overview
 
 - **Local-first & CLI-first** — No cloud, no API keys
-- **No LLM** — OpenStoat doesn't call any LLM; planning is done by external agents
+- **No LLM** — Palmlist doesn't call any LLM; planning is done by external agents
 - **1 human + N AI agents** — Humans are the bottleneck; AI fills all idle time
 - **Transparent** — Clear task states and ownership
 
@@ -29,8 +29,8 @@ A decoupled task queue that coordinates AI agents and humans. AI handles tasks t
 ### Install
 
 ```bash
-git clone https://github.com/meside-ai/openstoat.git
-cd openstoat
+git clone https://github.com/meside-ai/palmlist.git
+cd palmlist
 bun install
 bun run link:global   # Build + link CLI globally
 ```
@@ -38,44 +38,44 @@ bun run link:global   # Build + link CLI globally
 ### Usage
 
 ```bash
-openstoat init
-openstoat plan add "Integrate Paddle payment
+palmlist init
+palmlist plan add "Integrate Paddle payment
 1. Add Paddle to enum
 2. Provide API Key
 3. Implement PaddlePaymentService
 4. Code review
 5. Deploy to staging"
 
-openstoat task ls
-openstoat task done <task_id>
-openstoat daemon start   # Optional: auto-schedule AI tasks
+palmlist task ls
+palmlist task done <task_id>
+palmlist daemon start   # Optional: auto-schedule AI tasks
 ```
 
 ## CLI Commands
 
 ```bash
-openstoat init                    # Initialize
-openstoat config show/set         # Config
-openstoat plan add/ls/show/rm     # Plans
-openstoat task add/ls/done/...    # Tasks
-openstoat template ls/add/...     # Templates
-openstoat daemon start/stop       # Daemon
-openstoat handoff ls              # Handoffs
+palmlist init                    # Initialize
+palmlist config show/set         # Config
+palmlist plan add/ls/show/rm     # Plans
+palmlist task add/ls/done/...    # Tasks
+palmlist template ls/add/...     # Templates
+palmlist daemon start/stop       # Daemon
+palmlist handoff ls              # Handoffs
 ```
 
-Run `openstoat --help` for full usage.
+Run `palmlist --help` for full usage.
 
 ## Docs Deployment (Cloudflare Pages)
 
-The docs site (`packages/openstoat-docs`) deploys to Cloudflare Pages on push to `main`. Setup:
+The docs site (`packages/palmlist-docs`) deploys to Cloudflare Pages on push to `main`. Setup:
 
-1. Create a [Cloudflare Pages project](https://dash.cloudflare.com/?to=/:account/pages) named `openstoat-docs`
+1. Create a [Cloudflare Pages project](https://dash.cloudflare.com/?to=/:account/pages) named `palmlist-docs`
 2. Add GitHub secrets: `CLOUDFLARE_API_TOKEN` (Pages Edit permission), `CLOUDFLARE_ACCOUNT_ID`
 3. Push to `main` or trigger the "Deploy Docs to Cloudflare Pages" workflow manually
 
 ## Project Status
 
-**Today is Day 1.** OpenStoat is in active development. The core MVP is implemented:
+**Today is Day 1.** Palmlist is in active development. The core MVP is implemented:
 
 - [x] Plan parsing and task splitting
 - [x] Template-based task type matching
@@ -90,9 +90,9 @@ More features and polish are coming. Contributions welcome.
 
 ```
 bun install
-bun run packages/openstoat-cli/src/index.ts --help
-bun run packages/openstoat-cli/src/index.ts init
-bun run packages/openstoat-cli/src/index.ts task ls
+bun run packages/palmlist-cli/src/index.ts --help
+bun run packages/palmlist-cli/src/index.ts init
+bun run packages/palmlist-cli/src/index.ts task ls
 ```
 
 ## License

@@ -1,3 +1,7 @@
+---
+title: Palmlist Refactor
+---
+
 # Palmlist Refactor
 
 **Status:** In progress. All previous packages have been deprecated and removed.
