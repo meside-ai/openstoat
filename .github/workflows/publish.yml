@@ -34,53 +34,18 @@ jobs:
         run: |
           VERSION=${{ github.ref_name }}
           VERSION=${VERSION#v}
-          echo "Setting all packages to version $VERSION"
-          for pkg in palmlist-types palmlist-core palmlist-daemon palmlist-skills palmlist-web palmlist-cli; do
-            node -e "
-              const fs = require('fs');
-              const pkg = process.argv[1];
-              const version = process.argv[2];
-              const path = 'packages/' + pkg + '/package.json';
-              const p = JSON.parse(fs.readFileSync(path, 'utf8'));
-              p.version = version;
-              fs.writeFileSync(path, JSON.stringify(p, null, 2) + '\n');
-            " "$pkg" "$VERSION"
-          done
-          echo "Versions updated. Running bun install to update lockfile..."
-          bun install
+          echo "Setting palmlist to version $VERSION"
+          node -e "
+            const fs = require('fs');
+            const p = JSON.parse(fs.readFileSync('packages/palmlist-cli/package.json', 'utf8'));
+            p.version = process.argv[2];
+            fs.writeFileSync('packages/palmlist-cli/package.json', JSON.stringify(p, null, 2) + '\n');
+          " dummy "$VERSION"
 
       - name: Build
         run: bun run build
 
-      - name: Convert workspace:* to semver for publish
-        run: |
-          VERSION=${{ github.ref_name }}
-          VERSION=${VERSION#v}
-          echo "Converting workspace:* to ^$VERSION in package.json dependencies"
-          for pkg in palmlist-types palmlist-core palmlist-daemon palmlist-skills palmlist-web palmlist-cli; do
-            node -e "
-              const fs = require('fs');
-              const pkg = process.argv[1];
-              const version = process.argv[2];
-              const path = 'packages/' + pkg + '/package.json';
-              const p = JSON.parse(fs.readFileSync(path, 'utf8'));
-              for (const key of ['dependencies', 'peerDependencies']) {
-                if (p[key]) for (const dep of Object.keys(p[key])) {
-                  if (dep.startsWith('palmlist-') && p[key][dep] === 'workspace:*') {
-                    p[key][dep] = '^' + version;
-                  }
-                }
-              }
-              fs.writeFileSync(path, JSON.stringify(p, null, 2) + '\n');
-            " "$pkg" "$VERSION"
-          done
-
-      - name: Publish packages to npm
-        run: |
-          # Publish in dependency order (types -> core -> daemon -> skills -> web -> cli)
-          # palmlist (CLI) depends on palmlist-web, so web must be published first.
-          for pkg in palmlist-types palmlist-core palmlist-daemon palmlist-skills palmlist-web palmlist-cli; do
-            (cd packages/$pkg && npm publish --access public)
-          done
+      - name: Publish palmlist to npm
+        run: cd packages/palmlist-cli && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

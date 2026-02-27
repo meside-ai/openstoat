@@ -3,6 +3,9 @@ node_modules/
 .openstoat.json
 .agent/
 .claude/
+palmlist-planner/
+palmlist-worker/
 *.db
 .DS_Store
 packages/*/dist
+packages/palmlist-cli/skills

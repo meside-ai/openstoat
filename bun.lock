@@ -11,28 +11,29 @@
     },
     "packages/palmlist-cli": {
       "name": "palmlist",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "bin": {
         "palmlist": "./bin/palmlist",
       },
       "dependencies": {
-        "palmlist-core": "workspace:*",
-        "palmlist-daemon": "workspace:*",
-        "palmlist-skills": "workspace:*",
-        "palmlist-types": "workspace:*",
-        "palmlist-web": "workspace:*",
         "yargs": "^17.7.2",
       },
       "devDependencies": {
         "@types/bun": "latest",
         "@types/node": "^20.0.0",
         "@types/yargs": "^17.0.35",
+        "esbuild": "^0.27.0",
+        "palmlist-core": "workspace:*",
+        "palmlist-daemon": "workspace:*",
+        "palmlist-skills": "workspace:*",
+        "palmlist-types": "workspace:*",
+        "palmlist-web": "workspace:*",
         "typescript": "^5.0.0",
       },
     },
     "packages/palmlist-core": {
       "name": "palmlist-core",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "dependencies": {
         "palmlist-types": "workspace:*",
       },
@@ -43,7 +44,7 @@
     },
     "packages/palmlist-daemon": {
       "name": "palmlist-daemon",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "dependencies": {
         "palmlist-core": "workspace:*",
       },
@@ -74,11 +75,11 @@
     },
     "packages/palmlist-skills": {
       "name": "palmlist-skills",
-      "version": "0.2.4",
+      "version": "0.2.5",
     },
     "packages/palmlist-types": {
       "name": "palmlist-types",
-      "version": "0.2.4",
+      "version": "0.2.5",
       "devDependencies": {
         "typescript": "^5.0.0",
       },

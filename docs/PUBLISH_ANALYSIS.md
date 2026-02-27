@@ -1,32 +1,26 @@
-# npm Publish Failure Analysis
+# npm Publish Analysis
 
-## Root Cause (Resolved)
+## Single-Package Publish (Current)
 
-**Version conflict**: The workflow was trying to publish versions that already existed on npm.
-When pushing tag v0.2.7, package.json still had version 0.2.5. npm rejects "Cannot publish over
-previously published version" (EPUBLISHCONFLICT).
+Palmlist is published as a **single package** `palmlist` on npm. All internal packages
+(palmlist-types, palmlist-core, palmlist-daemon, palmlist-skills, palmlist-web) are
+bundled into the CLI via esbuild. Users install only `palmlist`.
 
-## Fix Applied
+### Build Process
 
-1. **Set version from tag** — Before publish, extract version from git tag (e.g. v0.2.8 → 0.2.8)
-   and update all package.json files. Ensures each tag publishes unique versions.
+1. Build types → core → daemon → web (tsc)
+2. Bundle CLI with esbuild (includes all palmlist-* code)
+3. Copy palmlist-skills/skills to package/skills
+4. Publish packages/palmlist-cli as `palmlist`
 
-2. **Add palmlist-web to publish workflow** — palmlist (CLI) depends on it; web must be published first.
+### Publish Workflow
 
-3. **Publish order**: types → core → daemon → skills → web → cli
+- Trigger: git tag push `v*`
+- Sets version from tag on palmlist-cli
+- Publishes only `palmlist` to npm
 
-## Current Status
+### Requirements
 
-| Package | On npm? |
-|---------|---------|
-| palmlist-types | ✅ |
-| palmlist-core | ✅ |
-| palmlist-daemon | ✅ |
-| palmlist-skills | ✅ |
-| palmlist-web | After fix |
-| palmlist (CLI) | After fix |
-
-## Secondary Issue: workspace:* Not Converted
-
-Published packages may show `"palmlist-core": "workspace:*"` instead of semver.
-Bun/npm does not auto-convert during publish (unlike pnpm). May cause install issues.
+- **Bun**: The CLI uses `bun:sqlite`; bin runs with `#!/usr/bin/env bun`
+- **palmlist npm account**: Package name `palmlist` is reserved by npm user `palmlist`.
+  Use NPM_TOKEN from that account for publish.
