@@ -14,6 +14,7 @@ import { AGENT_MANUAL } from './agent-manual.js';
 
 const cli = yargs(hideBin(process.argv))
   .scriptName('openstoat')
+  .wrap(null) // Disable yargs word-wrap; ESM has a bug that breaks words mid-character (yargs/yargs#2112)
   .usage(
     'Usage: $0 <command> [options]\n\n' +
       'OpenStoat orchestrates tasks between AI agents and humans. Local-first, CLI-first.\n' +
