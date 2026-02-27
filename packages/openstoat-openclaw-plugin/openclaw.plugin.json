@@ -18,9 +18,21 @@
         "default": "openstoat",
         "description": "Path to openstoat binary"
       },
+      "apiBaseUrl": {
+        "type": "string",
+        "description": "(Future) OpenStoat API URL"
+      },
+      "apiToken": {
+        "type": "string",
+        "description": "(Future) API token"
+      },
       "defaultProject": {
         "type": "string",
         "description": "Default project ID for new tasks"
+      },
+      "defaultPriority": {
+        "type": "string",
+        "description": "Default priority"
       },
       "forceDevTasksToOpenstoat": {
         "type": "boolean",
@@ -36,18 +48,18 @@
         "type": "number",
         "default": 30,
         "description": "Background poll interval in seconds (0 for disabled)"
+      },
+      "enableWebhook": {
+        "type": "boolean",
+        "default": false,
+        "description": "(Future) Enable webhook receiver"
       }
     }
   },
   "uiHints": {
-    "cliPath": {
-      "label": "OpenStoat CLI Path",
-      "placeholder": "openstoat"
-    },
-    "defaultProject": {
-      "label": "Default Project ID",
-      "placeholder": "my-project"
-    }
+    "cliPath": { "label": "OpenStoat CLI Path", "placeholder": "openstoat" },
+    "defaultProject": { "label": "Default Project ID", "placeholder": "my-project" },
+    "apiToken": { "sensitive": true }
   },
   "skills": ["skills/openstoat-skill"]
 }
