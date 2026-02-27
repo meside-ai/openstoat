@@ -1,5 +1,5 @@
 {
-  "name": "palmlist",
+  "name": "@palmlist/palmlist",
   "version": "0.2.5",
   "description": "AI and Human task queue - orchestrate work between AI agents and humans with a local-first CLI",
   "type": "module",
