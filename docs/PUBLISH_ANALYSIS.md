@@ -22,5 +22,5 @@ bundled into the CLI via esbuild. Users install only `palmlist`.
 ### Requirements
 
 - **Bun**: The CLI uses `bun:sqlite`; bin runs with `#!/usr/bin/env bun`
-- **palmlist npm account**: Package name `palmlist` is reserved by npm user `palmlist`.
-  Use NPM_TOKEN from that account for publish.
+- **npm naming**: Unscoped `palmlist` may be rejected as similar to `yallist`. If so, contact
+  npm support (naming dispute) to request an exception.
