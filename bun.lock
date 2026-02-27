@@ -11,28 +11,29 @@
     },
     "packages/openstoat-cli": {
       "name": "openstoat",
-      "version": "0.2.2",
+      "version": "0.3.0",
       "bin": {
         "openstoat": "./bin/openstoat",
       },
       "dependencies": {
-        "openstoat-core": "workspace:*",
-        "openstoat-daemon": "workspace:*",
-        "openstoat-skills": "workspace:*",
-        "openstoat-types": "workspace:*",
-        "openstoat-web": "workspace:*",
         "yargs": "^17.7.2",
       },
       "devDependencies": {
         "@types/bun": "latest",
         "@types/node": "^20.0.0",
         "@types/yargs": "^17.0.35",
+        "esbuild": "^0.27.0",
+        "openstoat-core": "workspace:*",
+        "openstoat-daemon": "workspace:*",
+        "openstoat-skills": "workspace:*",
+        "openstoat-types": "workspace:*",
+        "openstoat-web": "workspace:*",
         "typescript": "^5.0.0",
       },
     },
     "packages/openstoat-core": {
       "name": "openstoat-core",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "dependencies": {
         "openstoat-types": "workspace:*",
       },
@@ -43,7 +44,7 @@
     },
     "packages/openstoat-daemon": {
       "name": "openstoat-daemon",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "dependencies": {
         "openstoat-core": "workspace:*",
       },
@@ -74,11 +75,11 @@
     },
     "packages/openstoat-skills": {
       "name": "openstoat-skills",
-      "version": "0.2.2",
+      "version": "0.2.4",
     },
     "packages/openstoat-types": {
       "name": "openstoat-types",
-      "version": "0.2.2",
+      "version": "0.2.4",
       "devDependencies": {
         "typescript": "^5.0.0",
       },

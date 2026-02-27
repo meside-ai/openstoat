@@ -30,15 +30,22 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Set version from tag
+        run: |
+          VERSION=${{ github.ref_name }}
+          VERSION=${VERSION#v}
+          echo "Setting openstoat to version $VERSION"
+          node -e "
+            const fs = require('fs');
+            const p = JSON.parse(fs.readFileSync('packages/openstoat-cli/package.json', 'utf8'));
+            p.version = process.argv[2];
+            fs.writeFileSync('packages/openstoat-cli/package.json', JSON.stringify(p, null, 2) + '\n');
+          " dummy "$VERSION"
+
       - name: Build
         run: bun run build
 
-      - name: Publish packages to npm
-        run: |
-          # Publish in dependency order (types -> core -> daemon -> skills -> cli)
-          # First publish: use NPM_TOKEN. After packages exist, switch to Trusted Publishing (OIDC).
-          for pkg in openstoat-types openstoat-core openstoat-daemon openstoat-skills openstoat-cli; do
-            (cd packages/$pkg && npm publish --access public)
-          done
+      - name: Publish openstoat to npm
+        run: cd packages/openstoat-cli && npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

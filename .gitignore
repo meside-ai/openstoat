@@ -5,3 +5,4 @@ node_modules/
 *.db
 .DS_Store
 packages/*/dist
+packages/openstoat-cli/skills

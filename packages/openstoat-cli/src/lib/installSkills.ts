@@ -16,18 +16,22 @@ const TARGET_DIRS_HERE = [''];
 
 /**
  * Get the path to the openstoat-skills package skills directory.
+ * When bundled (published): skills are at package-root/skills.
+ * When in monorepo: resolve from openstoat-skills workspace package.
  */
 function getSkillsSourcePath(): string {
+  const currentDir = path.dirname(fileURLToPath(import.meta.url));
+  const bundledSkills = path.join(currentDir, '../skills');
+  if (fs.existsSync(bundledSkills)) {
+    return bundledSkills;
+  }
   try {
-    // Resolve from openstoat-cli's node_modules (workspace or hoisted)
     const pkgPath = require.resolve('openstoat-skills/package.json', {
-      paths: [path.dirname(fileURLToPath(import.meta.url))],
+      paths: [currentDir],
     });
     return path.join(path.dirname(pkgPath), 'skills');
   } catch {
-    // Fallback: relative to this file (e.g. in monorepo packages/openstoat-cli)
-    const dir = path.dirname(fileURLToPath(import.meta.url));
-    return path.join(dir, '../../openstoat-skills/skills');
+    return path.join(currentDir, '../../openstoat-skills/skills');
   }
 }
 
