@@ -1,6 +1,6 @@
 {
   "name": "openstoat",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "AI and Human task queue - orchestrate work between AI agents and humans with a local-first CLI",
   "bin": {
     "openstoat": "./bin/openstoat"
