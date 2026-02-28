@@ -29,8 +29,32 @@ export function registerTools(api: {
   const cfg = () => getConfig(api);
 
   api.registerTool?.({
+    name: 'openstoat_show_project',
+    description: 'Show project details including template_context and workflow_instructions. Call this BEFORE creating tasks to read workflow prerequisites and finish steps that must be injected into task descriptions.',
+    parameters: {
+      type: 'object',
+      properties: {
+        project: { type: 'string', description: 'Project ID' },
+      },
+      required: ['project'],
+    },
+    async execute(_id: string, params: Record<string, unknown>) {
+      const project = (params.project as string) ?? (api.config?.defaultProject as string);
+      if (!project) return toolResult(false, 'Missing project; set defaultProject in config or pass project');
+      const { data, error } = runOpenstoatJson<unknown>(['project', 'show', project], cfg());
+      if (error) return toolResult(false, error);
+      return toolResult(true, 'Project details', { project: data });
+    },
+  });
+
+  api.registerTool?.({
     name: 'openstoat_create_task',
-    description: 'Create a task in OpenStoat. Use for development tasks (code changes, features, refactors, tests).',
+    description:
+      'Create a task in OpenStoat. IMPORTANT WORKFLOW — before calling this tool you MUST:\n' +
+      '1. Call openstoat_list_tasks with status "ready,in_progress" to check for duplicates.\n' +
+      '2. Call openstoat_show_project to read workflow_instructions from template_context.\n' +
+      '3. If workflow_instructions exist, inject prerequisites into the description and finish steps into acceptance_criteria.\n' +
+      'Skipping these steps creates incomplete or duplicate tasks.',
     parameters: {
       type: 'object',
       properties: {
@@ -79,7 +103,7 @@ export function registerTools(api: {
 
   api.registerTool?.({
     name: 'openstoat_list_tasks',
-    description: 'List tasks in OpenStoat with optional filters.',
+    description: 'List tasks in OpenStoat with optional filters. MUST be called with status "ready,in_progress" before creating tasks to avoid duplicates.',
     parameters: {
       type: 'object',
       properties: {
