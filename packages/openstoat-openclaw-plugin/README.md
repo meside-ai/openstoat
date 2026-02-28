@@ -16,6 +16,32 @@ openclaw plugins install -l ./packages/openstoat-openclaw-plugin
 
 ## Configuration
 
+### Plugin allowlist (recommended)
+
+If you see this warning:
+
+```
+plugins.allow is empty; discovered non-bundled plugins may auto-load: openstoat-openclaw-plugin (...). Set plugins.allow to explicit trusted ids.
+```
+
+Add the plugin to your allowlist in `~/.openclaw/openclaw.json` (or `openclaw.json5`):
+
+```json
+{
+  "plugins": {
+    "enabled": true,
+    "allow": ["openstoat-openclaw-plugin"],
+    "entries": {
+      "openstoat-openclaw-plugin": { "enabled": true, "config": { ... } }
+    }
+  }
+}
+```
+
+This explicitly trusts the plugin and silences the warning.
+
+### Plugin config
+
 Configure under `plugins.entries.openstoat-openclaw-plugin.config`:
 
 - `connectionMode`: `"cli"` (default) or `"api"`

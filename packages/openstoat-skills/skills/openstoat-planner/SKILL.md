@@ -20,17 +20,9 @@ openstoat task ls --project <project_id> --status ready,in_progress
 
 Compare your candidate task intent with existing tasks. If an equivalent unfinished task exists, **do not create**; reuse the existing task ID in your output.
 
-### 1.5 Read Project Workflow (when creating tasks)
-
-Before creating tasks, fetch project context:
-
-```bash
-openstoat project show <project_id>
-```
-
-If `template_context.workflow_instructions` exists, use it as a super prompt when writing task descriptions and acceptance criteria. Inject prerequisites and finish steps from the instructions into each task's description and acceptance_criteria.
-
 ### 2. Create Tasks with All Required Fields
+
+Workflow instructions (prerequisites, finish steps) from the project are **automatically injected** into task description and acceptance criteria — no manual injection needed.
 
 ```bash
 openstoat task create \

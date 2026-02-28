@@ -2,7 +2,7 @@
  * OpenStoat shared type definitions
  */
 
-export const TASK_STATUSES = ['ready', 'in_progress', 'done'] as const;
+export const TASK_STATUSES = ['ready', 'in_progress', 'done', 'cancelled'] as const;
 export type TaskStatus = (typeof TASK_STATUSES)[number];
 
 export const TASK_OWNERS = ['agent_worker', 'human_worker'] as const;

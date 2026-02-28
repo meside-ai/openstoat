@@ -15,6 +15,45 @@ import { createHandoff, getDownstreamTaskIds } from './handoff.js';
 
 const MIN_HANDOFF_LENGTH = 200;
 
+/** Parse workflow_instructions and inject into description and acceptance_criteria. */
+function injectWorkflowInstructions(
+  workflowInstructions: string,
+  description: string,
+  acceptanceCriteria: string[]
+): { description: string; acceptanceCriteria: string[] } {
+  const prereqMarker = 'Prerequisites (inject into task description):';
+  const finishMarker = 'Finish steps (inject into acceptance_criteria):';
+
+  let prereqBlock = '';
+  let finishBlock = '';
+
+  const finishIdx = workflowInstructions.indexOf(finishMarker);
+  if (finishIdx >= 0) {
+    finishBlock = workflowInstructions.slice(finishIdx + finishMarker.length).trim();
+  }
+
+  const prereqIdx = workflowInstructions.indexOf(prereqMarker);
+  if (prereqIdx >= 0) {
+    const endOfPrereq = finishIdx >= 0 ? finishIdx : workflowInstructions.length;
+    prereqBlock = workflowInstructions.slice(prereqIdx + prereqMarker.length, endOfPrereq).trim();
+  }
+
+  const newDescription =
+    prereqBlock.length > 0 ? `${prereqBlock}\n\n---\n\n${description}` : description;
+
+  const finishItems = finishBlock
+    .split('\n')
+    .map((line) => line.replace(/^\s*[-*]\s*/, '').trim())
+    .filter((s) => s.length > 0);
+
+  const newAcceptanceCriteria =
+    finishItems.length > 0
+      ? [...acceptanceCriteria, ...finishItems]
+      : acceptanceCriteria;
+
+  return { description: newDescription, acceptanceCriteria: newAcceptanceCriteria };
+}
+
 function generateTaskId(project: string): string {
   const db = getDb();
   const count = db.query('SELECT COUNT(*) as c FROM tasks WHERE project = ?').get(project) as {
@@ -27,6 +66,19 @@ export function createTask(input: CreateTaskInput): Task {
   const project = getProject(input.project);
   if (!project) {
     throw new Error(`Project '${input.project}' does not exist`);
+  }
+
+  let description = input.description;
+  let acceptanceCriteria = input.acceptance_criteria;
+
+  if (project.template_context.workflow_instructions) {
+    const injected = injectWorkflowInstructions(
+      project.template_context.workflow_instructions,
+      description,
+      acceptanceCriteria
+    );
+    description = injected.description;
+    acceptanceCriteria = injected.acceptanceCriteria;
   }
 
   const db = getDb();
@@ -48,8 +100,8 @@ export function createTask(input: CreateTaskInput): Task {
     id,
     input.project,
     input.title,
-    input.description,
-    JSON.stringify(input.acceptance_criteria),
+    description,
+    JSON.stringify(acceptanceCriteria),
     JSON.stringify(dependsOn),
     input.status,
     input.owner,
@@ -276,6 +328,23 @@ export function completeTask(
   }
 
   return getTask(taskId)!;
+}
+
+export function cancelTask(taskId: string, logsAppend?: string): Task | null {
+  const task = getTask(taskId);
+  if (!task) return null;
+  if (task.status === 'cancelled') return task;
+
+  const logs = [...task.logs];
+  if (logsAppend) logs.push(logsAppend);
+
+  updateTask(taskId, {
+    status: 'cancelled',
+    claimed_by: null,
+    logs,
+  });
+
+  return getTask(taskId);
 }
 
 export function selfUnblockTask(

@@ -18,6 +18,7 @@ export {
   startTask,
   completeTask,
   selfUnblockTask,
+  cancelTask,
   areDependenciesSatisfied,
 } from './task.js';
 export { createHandoff, listHandoffs, getDownstreamTaskIds } from './handoff.js';

@@ -30,7 +30,7 @@ export function registerTools(api: {
 
   api.registerTool?.({
     name: 'openstoat_show_project',
-    description: 'Show project details including template_context and workflow_instructions. Call this BEFORE creating tasks to read workflow prerequisites and finish steps that must be injected into task descriptions.',
+    description: 'Show project details including template_context and workflow_instructions. Workflow instructions are auto-injected when creating tasks; use this for context or to verify project config.',
     parameters: {
       type: 'object',
       properties: {
@@ -50,11 +50,7 @@ export function registerTools(api: {
   api.registerTool?.({
     name: 'openstoat_create_task',
     description:
-      'Create a task in OpenStoat. IMPORTANT WORKFLOW — before calling this tool you MUST:\n' +
-      '1. Call openstoat_list_tasks with status "ready,in_progress" to check for duplicates.\n' +
-      '2. Call openstoat_show_project to read workflow_instructions from template_context.\n' +
-      '3. If workflow_instructions exist, inject prerequisites into the description and finish steps into acceptance_criteria.\n' +
-      'Skipping these steps creates incomplete or duplicate tasks.',
+      'Create a task in OpenStoat. Workflow instructions (prerequisites, finish steps) from the project are automatically injected into the task. Before creating, call openstoat_list_tasks with status "ready,in_progress" to avoid duplicates.',
     parameters: {
       type: 'object',
       properties: {

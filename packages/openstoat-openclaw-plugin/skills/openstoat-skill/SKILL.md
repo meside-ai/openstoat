@@ -10,7 +10,7 @@ Use this skill when OpenClaw must route development work to OpenStoat instead of
 
 ## Mandatory Workflow for Task Creation
 
-**You MUST follow ALL steps in order. Skipping steps creates duplicate or incomplete tasks.**
+**You MUST follow ALL steps in order. Skipping steps creates duplicate tasks.**
 
 ### Step 1: List Existing Tasks (Mandatory)
 
@@ -22,31 +22,15 @@ openstoat_list_tasks({ project: "<project_id>", status: "ready,in_progress" })
 
 Compare your candidate task with existing tasks. If an equivalent unfinished task exists, **do not create** — reuse the existing task ID.
 
-### Step 2: Read Project Workflow (Mandatory)
+### Step 2: Create the Task
 
-Call `openstoat_show_project` to fetch `template_context.workflow_instructions`:
-
-```
-openstoat_show_project({ project: "<project_id>" })
-```
-
-If `workflow_instructions` exists, treat it as a super prompt for writing task descriptions and acceptance criteria.
-
-### Step 3: Inject Workflow into Task (Mandatory when workflow_instructions exist)
-
-When `workflow_instructions` contains:
-- **Prerequisites** (e.g. verify base branch, create git worktree, create branch) → inject into the task **description** as prerequisite steps
-- **Finish steps** (e.g. run tests locally, push branch, create PR, add reviewers) → inject into the task **acceptance_criteria** as completion requirements
-
-### Step 4: Create the Task
-
-Only after completing Steps 1-3, call `openstoat_create_task` with the enriched description and acceptance criteria.
+Call `openstoat_create_task` with the task title, description, and acceptance criteria. Workflow instructions (prerequisites, finish steps) from the project are **automatically injected** into the task description and acceptance criteria — no manual injection needed.
 
 ## Default Behavior
 
 When a development task is identified:
 
-1. Follow the Mandatory Workflow above (Steps 1-4)
+1. Follow the Mandatory Workflow above (Steps 1-2)
 2. Do not modify code directly
 3. Wait for task completion
 4. Let OpenStoat decide which agent executes

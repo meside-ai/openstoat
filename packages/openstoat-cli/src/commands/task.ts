@@ -11,6 +11,7 @@ import {
   startTask,
   completeTask,
   selfUnblockTask,
+  cancelTask,
 } from 'openstoat-core';
 import type { TaskStatus } from 'openstoat-types';
 
@@ -33,7 +34,7 @@ export const taskCommands = {
             })
             .option('status', {
               type: 'string',
-              describe: 'Filter by status (comma-separated: ready,in_progress,done)',
+              describe: 'Filter by status (comma-separated: ready,in_progress,done,cancelled)',
             })
             .option('owner', {
               type: 'string',
@@ -90,7 +91,7 @@ export const taskCommands = {
             .option('status', {
               type: 'string',
               demandOption: true,
-              choices: ['ready', 'in_progress', 'done'],
+              choices: ['ready', 'in_progress', 'done', 'cancelled'],
             })
             .option('owner', {
               type: 'string',
@@ -240,7 +241,26 @@ export const taskCommands = {
           console.log(argv.json ? JSON.stringify(task, null, 2) : formatTask(task));
         },
       })
-      .demandCommand(1, 'Specify ls, create, claim, start, done, self-unblock, or show'),
+      .command({
+        command: 'cancel <task_id>',
+        describe: 'Cancel a task. Moves to cancelled status. Task is excluded from active workflow.',
+        builder: (y: Argv) =>
+          y
+            .positional('task_id', { type: 'string', demandOption: true })
+            .option('logs-append', { type: 'string', describe: 'Reason for cancellation' }),
+        handler: (argv: Record<string, unknown>) => {
+          const task = cancelTask(
+            argv.task_id as string,
+            argv['logs-append'] as string | undefined
+          );
+          if (!task) {
+            console.error(`Task '${argv.task_id}' not found.`);
+            process.exit(1);
+          }
+          console.log(`Cancelled ${task.id}`);
+        },
+      })
+      .demandCommand(1, 'Specify ls, create, claim, start, done, self-unblock, show, or cancel'),
   handler: () => {},
 };
 

@@ -91,6 +91,7 @@ function renderHtml(filters: FilterParams, projects: Project[], tasks: Task[], h
     { v: ['ready'], l: 'ready' },
     { v: ['in_progress'], l: 'in_progress' },
     { v: ['done'], l: 'done' },
+    { v: ['cancelled'], l: 'cancelled' },
     { v: ['ready', 'in_progress'], l: 'unfinished' },
   ];
   const statusLinks = statusOpts.map(
@@ -123,6 +124,7 @@ function renderHtml(filters: FilterParams, projects: Project[], tasks: Task[], h
     ready: tasks.filter((t) => t.status === 'ready'),
     in_progress: tasks.filter((t) => t.status === 'in_progress'),
     done: tasks.filter((t) => t.status === 'done'),
+    cancelled: tasks.filter((t) => t.status === 'cancelled'),
   };
 
   return `<!DOCTYPE html>
@@ -227,6 +229,10 @@ function renderHtml(filters: FilterParams, projects: Project[], tasks: Task[], h
     <div class="column">
       <h3>Done</h3>
       ${tasksByStatus.done.map(renderTaskCard).join('')}
+    </div>
+    <div class="column">
+      <h3>Cancelled</h3>
+      ${tasksByStatus.cancelled.map(renderTaskCard).join('')}
     </div>
   </div>
 
