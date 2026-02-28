@@ -131,6 +131,22 @@
   box-shadow: 4px 4px 0 var(--pixel-border);
 }
 
+/* Home page install command: prominent, left-aligned */
+.install-block .install-cmd {
+  font-size: 1rem;
+  text-align: left;
+}
+@media (min-width: 640px) {
+  .install-block .install-cmd {
+    font-size: 1.125rem;
+  }
+}
+@media (min-width: 768px) {
+  .install-block .install-cmd {
+    font-size: 1.25rem;
+  }
+}
+
 /* Override typography plugin colors for pixel art black/white */
 .prose, .prose-dark {
   color: var(--pixel-fg) !important;
@@ -150,6 +166,13 @@
   color: var(--pixel-fg) !important;
   text-decoration: underline;
   text-underline-offset: 4px;
+}
+
+/* Filled CTA button: inverted colors, exclude from prose link styling */
+.prose a.btn-filled,
+.prose-dark a.btn-filled {
+  color: var(--pixel-bg) !important;
+  text-decoration: none;
 }
 
 .prose strong, .prose-dark strong {

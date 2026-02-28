@@ -27,10 +27,43 @@ const sidebarItems = [
       <p class="mt-4" style="color: var(--pixel-muted);">
         Local-first, CLI-first. No account or API key required. OpenStoat orchestrates tasks between AI agents and humans—agents execute by default, humans join when needed.
       </p>
+      <div class="install-block not-prose mt-6 relative">
+        <div
+          id="install-cmd"
+          class="install-cmd overflow-x-auto px-5 py-4 pr-14 font-pixel border-2 border-[var(--pixel-border)] bg-[var(--pixel-hover-bg)] text-[var(--pixel-fg)] text-left"
+          style="box-shadow: 4px 4px 0 var(--pixel-border);"
+        >
+          npm install openstoat
+        </div>
+        <button
+          type="button"
+          id="install-copy-btn"
+          class="absolute top-3 right-3 p-2 border-2 border-[var(--pixel-border)] bg-[var(--pixel-bg)] text-[var(--pixel-fg)] hover:bg-[var(--pixel-hover-bg)] transition font-pixel text-xs"
+          aria-label="Copy to clipboard"
+          title="Copy"
+        >
+          <span id="install-copy-text">Copy</span>
+        </button>
+      </div>
+      <script>
+        document.getElementById('install-copy-btn')?.addEventListener('click', async function () {
+          const text = (document.getElementById('install-cmd')?.textContent ?? '').trim();
+          const label = document.getElementById('install-copy-text');
+          try {
+            await navigator.clipboard.writeText(text);
+            if (label) {
+              label.textContent = 'Copied!';
+              setTimeout(() => (label.textContent = 'Copy'), 2000);
+            }
+          } catch {
+            if (label) label.textContent = 'Failed';
+          }
+        });
+      </script>
       <div class="flex gap-4 mt-6 not-prose">
         <a
           href="/docs"
-          class="inline-flex items-center px-4 py-2 font-pixel text-xs border-2 border-[var(--pixel-border)] bg-[var(--pixel-fg)] text-[var(--pixel-bg)] hover:opacity-90 transition"
+          class="btn-filled inline-flex items-center px-4 py-2 font-pixel text-xs border-2 border-[var(--pixel-border)] bg-[var(--pixel-fg)] text-[var(--pixel-bg)] hover:opacity-90 transition"
           style="box-shadow: 4px 4px 0 var(--pixel-border);"
         >
           Documentation
