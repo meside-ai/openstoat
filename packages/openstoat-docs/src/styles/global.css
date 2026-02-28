@@ -1,9 +1,9 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: 'Pixelify Sans', 'Press Start 2P', monospace;
+  --font-sans: 'VT323', 'Pixelify Sans', 'Press Start 2P', monospace;
   --font-heading: 'Press Start 2P', 'Pixelify Sans', monospace;
 }
 
@@ -12,7 +12,7 @@
 }
 
 @utility font-pixel-body {
-  font-family: 'Pixelify Sans', 'Press Start 2P', monospace;
+  font-family: 'VT323', 'Pixelify Sans', 'Press Start 2P', monospace;
 }
 
 /* Pixel art aesthetic: black and white color scheme */
@@ -101,9 +101,15 @@
   color: var(--pixel-fg);
 }
 
-/* Prose overrides for pixel aesthetic */
+/* Prose overrides for pixel aesthetic - VT323 for readable body, Press Start 2P for headings */
 .prose {
-  font-family: 'Pixelify Sans', 'Press Start 2P', monospace;
+  font-family: 'VT323', 'Pixelify Sans', 'Press Start 2P', monospace;
+  font-size: 1.125rem;
+  line-height: 1.75;
+  letter-spacing: 0.02em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .prose h1, .prose h2, .prose h3, .prose h4 {
