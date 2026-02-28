@@ -24,22 +24,26 @@ const sidebarItems = [
 ---
 
 <Layout title="Blog" sidebarItems={sidebarItems} currentSection="blogs">
-  <div class="prose dark:prose-invert max-w-none">
-    <h1>Blog</h1>
-    <p class="text-slate-600 dark:text-slate-400">
+  <div class="prose dark:prose-invert max-w-none" style="color: var(--pixel-fg);">
+    <h1 class="font-pixel text-lg" style="color: var(--pixel-fg);">Blog</h1>
+    <p class="font-pixel-body" style="color: var(--pixel-muted);">
       Stories, updates, and insights about OpenStoat.
     </p>
-    <h2>Posts</h2>
-    <ul class="space-y-2">
+    <h2 class="font-pixel text-sm mt-6" style="color: var(--pixel-fg);">Posts</h2>
+    <ul class="space-y-2 mt-4">
       {sortedBlogs.map((b) => {
         const s = b.id.replace(/\.md$/, '');
         const dateStr = b.data.publishDate ? new Date(b.data.publishDate).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : null;
         return (
           <li>
-            <a href={`/blogs/${s}`} class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+            <a
+              href={`/blogs/${s}`}
+              class="font-pixel-body underline hover:no-underline transition"
+              style="color: var(--pixel-fg); text-underline-offset: 4px;"
+            >
               {b.data.title ?? s}
             </a>
-            {dateStr && <span class="text-slate-500 dark:text-slate-400 text-sm ml-2">— {dateStr}</span>}
+            {dateStr && <span class="font-pixel-body text-sm ml-2" style="color: var(--pixel-muted);">— {dateStr}</span>}
           </li>
         );
       })}

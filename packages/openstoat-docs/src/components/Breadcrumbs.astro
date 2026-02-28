@@ -1,6 +1,7 @@
 ---
 /**
  * GitBook-style breadcrumb navigation for doc hierarchy.
+ * Pixel art aesthetic: black and white.
  */
 interface Crumb {
   href: string;
@@ -16,19 +17,20 @@ const { items } = Astro.props;
 
 {items.length > 0 && (
   <nav class="mb-6" aria-label="Breadcrumb">
-    <ol class="flex flex-wrap items-center gap-2 text-sm text-slate-600 dark:text-slate-400">
+    <ol class="flex flex-wrap items-center gap-2 text-sm font-pixel-body" style="color: var(--pixel-muted);">
       {items.map((item, i) => (
         <li class="flex items-center gap-2">
           {i > 0 && (
             <svg
-              class="w-4 h-4 text-slate-400"
+              class="w-4 h-4"
+              style="color: var(--pixel-muted);"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
             >
               <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
+                stroke-linecap="square"
+                stroke-linejoin="miter"
                 stroke-width="2"
                 d="M9 5l7 7-7 7"
               />
@@ -37,12 +39,13 @@ const { items } = Astro.props;
           {i < items.length - 1 ? (
             <a
               href={item.href}
-              class="hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+              class="hover:opacity-80 transition"
+              style="color: var(--pixel-fg);"
             >
               {item.label}
             </a>
           ) : (
-            <span class="text-slate-900 dark:text-slate-100 font-medium">
+            <span class="font-medium" style="color: var(--pixel-fg);">
               {item.label}
             </span>
           )}

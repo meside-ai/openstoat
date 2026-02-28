@@ -20,18 +20,22 @@ const sidebarItems = [
 ---
 
 <Layout title="Documentation" sidebarItems={sidebarItems} currentSection="docs">
-  <div class="prose dark:prose-invert max-w-none">
-    <h1>Documentation</h1>
-    <p class="text-slate-600 dark:text-slate-400">
+  <div class="prose dark:prose-invert max-w-none" style="color: var(--pixel-fg);">
+    <h1 class="font-pixel text-lg" style="color: var(--pixel-fg);">Documentation</h1>
+    <p class="font-pixel-body" style="color: var(--pixel-muted);">
       Learn about OpenStoat's architecture, product specification, use cases, and development conventions.
     </p>
-    <h2>Documentation Index</h2>
-    <ul class="space-y-2">
+    <h2 class="font-pixel text-sm mt-6" style="color: var(--pixel-fg);">Documentation Index</h2>
+    <ul class="space-y-2 mt-4">
       {sortedDocs.map((d) => {
         const s = d.id.replace(/\.md$/, '');
         return (
           <li>
-            <a href={`/docs/${s}`} class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+            <a
+              href={`/docs/${s}`}
+              class="font-pixel-body underline hover:no-underline transition"
+              style="color: var(--pixel-fg); text-underline-offset: 4px;"
+            >
               {d.data.title ?? s}
             </a>
           </li>

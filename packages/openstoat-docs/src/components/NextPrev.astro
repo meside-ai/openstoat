@@ -1,6 +1,7 @@
 ---
 /**
  * GitBook-style next/previous page navigation at the bottom of doc pages.
+ * Pixel art aesthetic: black and white.
  */
 interface NavItem {
   href: string;
@@ -17,14 +18,16 @@ const { prev, next } = Astro.props;
 
 {(prev || next) && (
   <nav
-    class="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700 flex flex-wrap gap-4 justify-between"
+    class="mt-12 pt-8 border-t-4 font-pixel-body flex flex-wrap gap-4 justify-between"
+    style="border-color: var(--pixel-border);"
     aria-label="Page navigation"
   >
     <div class="flex-1 min-w-0">
       {prev ? (
         <a
           href={prev.href}
-          class="group flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+          class="group flex items-center gap-2 hover:opacity-80 transition"
+          style="color: var(--pixel-fg);"
         >
           <svg
             class="w-5 h-5 shrink-0 group-hover:-translate-x-0.5 transition-transform"
@@ -33,14 +36,14 @@ const { prev, next } = Astro.props;
             viewBox="0 0 24 24"
           >
             <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              stroke-linecap="square"
+              stroke-linejoin="miter"
               stroke-width="2"
               d="M15 19l-7-7 7-7"
             />
           </svg>
           <div class="min-w-0">
-            <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
+            <span class="text-xs font-pixel uppercase" style="color: var(--pixel-muted);">
               Previous
             </span>
             <p class="font-medium truncate">{prev.label}</p>
@@ -54,10 +57,11 @@ const { prev, next } = Astro.props;
       {next ? (
         <a
           href={next.href}
-          class="group flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors ml-auto justify-end"
+          class="group flex items-center gap-2 hover:opacity-80 transition ml-auto justify-end"
+          style="color: var(--pixel-fg);"
         >
           <div class="min-w-0 text-right">
-            <span class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase">
+            <span class="text-xs font-pixel uppercase" style="color: var(--pixel-muted);">
               Next
             </span>
             <p class="font-medium truncate">{next.label}</p>
@@ -69,8 +73,8 @@ const { prev, next } = Astro.props;
             viewBox="0 0 24 24"
           >
             <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              stroke-linecap="square"
+              stroke-linejoin="miter"
               stroke-width="2"
               d="M9 5l7 7-7 7"
             />

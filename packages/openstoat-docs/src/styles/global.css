@@ -1,14 +1,50 @@
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Pixelify+Sans:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Pixelify Sans', 'Press Start 2P', monospace;
+  --font-heading: 'Press Start 2P', 'Pixelify Sans', monospace;
 }
 
-/* GitBook-style admonition/callout blocks (remark-admonition output) */
+@utility font-pixel {
+  font-family: 'Press Start 2P', monospace;
+}
+
+@utility font-pixel-body {
+  font-family: 'Pixelify Sans', 'Press Start 2P', monospace;
+}
+
+/* Pixel art aesthetic: black and white color scheme */
+:root {
+  --pixel-bg: #ffffff;
+  --pixel-fg: #000000;
+  --pixel-border: #000000;
+  --pixel-muted: #333333;
+  --pixel-hover-bg: #f0f0f0;
+}
+
+.dark {
+  --pixel-bg: #000000;
+  --pixel-fg: #ffffff;
+  --pixel-border: #ffffff;
+  --pixel-muted: #cccccc;
+  --pixel-hover-bg: #1a1a1a;
+}
+
+/* Pixel-style borders: sharp, chunky */
+.pixel-border {
+  border: 3px solid var(--pixel-border);
+  box-shadow: 4px 4px 0 var(--pixel-border);
+}
+
+/* GitBook-style admonition/callout blocks - pixel art black/white */
 [data-admonition-name],
 [data-admonish] {
-  @apply my-6 rounded-lg border px-4 py-3;
+  @apply my-6 px-4 py-3;
+  border: 3px solid var(--pixel-border);
+  box-shadow: 4px 4px 0 var(--pixel-border);
+  background: var(--pixel-hover-bg);
 }
 
 [data-admonish] > :first-child {
@@ -21,38 +57,110 @@
 
 [data-admonition-name="note"],
 [data-admonition-name="info"] {
-  @apply border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40;
+  border-color: var(--pixel-border);
+  background: var(--pixel-hover-bg);
 }
 
 [data-admonition-name="note"]::before,
 [data-admonition-name="info"]::before {
   content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2;
+  @apply block text-sm font-pixel mb-2;
+  color: var(--pixel-fg);
 }
 
 [data-admonition-name="tip"] {
-  @apply border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40;
+  border-color: var(--pixel-border);
+  background: var(--pixel-hover-bg);
 }
 
 [data-admonition-name="tip"]::before {
   content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-2;
+  @apply block text-sm font-pixel mb-2;
+  color: var(--pixel-fg);
 }
 
 [data-admonition-name="warning"] {
-  @apply border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40;
+  border-color: var(--pixel-border);
+  background: var(--pixel-hover-bg);
 }
 
 [data-admonition-name="warning"]::before {
   content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2;
+  @apply block text-sm font-pixel mb-2;
+  color: var(--pixel-fg);
 }
 
 [data-admonition-name="danger"] {
-  @apply border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/40;
+  border-color: var(--pixel-border);
+  background: var(--pixel-hover-bg);
 }
 
 [data-admonition-name="danger"]::before {
   content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-red-800 dark:text-red-200 mb-2;
+  @apply block text-sm font-pixel mb-2;
+  color: var(--pixel-fg);
+}
+
+/* Prose overrides for pixel aesthetic */
+.prose {
+  font-family: 'Pixelify Sans', 'Press Start 2P', monospace;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  font-family: 'Press Start 2P', monospace;
+}
+
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.prose pre, .prose code {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 0.75em;
+}
+
+.prose :where(code):not(:where([class~="not-prose"] *)) {
+  padding: 0.2em 0.4em;
+  border: 2px solid var(--pixel-border);
+  background: var(--pixel-hover-bg);
+}
+
+.prose :where(pre):not(:where([class~="not-prose"] *)) {
+  border: 3px solid var(--pixel-border);
+  box-shadow: 4px 4px 0 var(--pixel-border);
+}
+
+/* Override typography plugin colors for pixel art black/white */
+.prose, .prose-dark {
+  color: var(--pixel-fg) !important;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6,
+.prose-dark h1, .prose-dark h2, .prose-dark h3, .prose-dark h4, .prose-dark h5, .prose-dark h6 {
+  color: var(--pixel-fg) !important;
+}
+
+.prose p, .prose li, .prose blockquote,
+.prose-dark p, .prose-dark li, .prose-dark blockquote {
+  color: var(--pixel-fg) !important;
+}
+
+.prose a, .prose-dark a {
+  color: var(--pixel-fg) !important;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.prose strong, .prose-dark strong {
+  color: var(--pixel-fg) !important;
+}
+
+.prose hr, .prose-dark hr {
+  border-color: var(--pixel-border) !important;
+}
+
+.prose th, .prose td, .prose-dark th, .prose-dark td {
+  border-color: var(--pixel-border) !important;
+  color: var(--pixel-fg) !important;
 }
