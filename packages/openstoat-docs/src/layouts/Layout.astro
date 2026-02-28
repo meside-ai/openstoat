@@ -26,11 +26,11 @@ const { title, sidebarItems, currentSection, contentClass = 'max-w-4xl' } = Astr
     <div class="flex min-h-screen">
       <aside
         id="sidebar"
-        class="fixed lg:static inset-y-0 left-0 z-40 w-64 bg-[var(--pixel-bg)] border-r-4 border-[var(--pixel-border)] transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out"
+        class="fixed lg:sticky inset-y-0 left-0 lg:top-0 z-40 w-64 h-screen bg-[var(--pixel-bg)] border-r-4 border-[var(--pixel-border)] transform -translate-x-full lg:translate-x-0 transition-transform duration-200 ease-out flex flex-col"
         style="box-shadow: 4px 0 0 var(--pixel-border);"
       >
-        <div class="flex flex-col h-full">
-          <div class="flex items-center justify-between p-4 border-b-4 border-[var(--pixel-border)]">
+        <div class="flex flex-col flex-1 min-h-0">
+          <div class="flex-shrink-0 flex items-center justify-between p-4 border-b-4 border-[var(--pixel-border)]">
             <a href="/" class="text-sm font-pixel text-[var(--pixel-fg)]">openstoat</a>
             <button
               id="sidebar-close"
@@ -113,7 +113,7 @@ const { title, sidebarItems, currentSection, contentClass = 'max-w-4xl' } = Astr
                 ))}
             </ul>
           </nav>
-          <div class="p-4 border-t-4 border-[var(--pixel-border)]">
+          <div class="flex-shrink-0 p-4 border-t-4 border-[var(--pixel-border)]">
             <button
               id="theme-toggle"
               class="flex items-center gap-2 px-3 py-2 font-pixel text-xs border-2 border-[var(--pixel-border)] hover:bg-[var(--pixel-hover-bg)] w-full text-left"
