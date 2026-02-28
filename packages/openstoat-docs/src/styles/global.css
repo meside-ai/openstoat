@@ -115,9 +115,19 @@
   text-underline-offset: 4px;
 }
 
-.prose pre, .prose code {
-  font-family: 'Press Start 2P', monospace;
-  font-size: 0.75em;
+/* Code blocks: use monospace for readability (ASCII art, commands, inline code) */
+.prose pre, .prose pre code {
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', 'Liberation Mono', monospace;
+  font-size: 0.875em;
+  letter-spacing: 0;
+  color: var(--pixel-fg) !important;
+  background: var(--pixel-hover-bg) !important;
+}
+
+.prose :where(code):not(:where(pre code)) {
+  font-family: ui-monospace, 'SF Mono', 'Cascadia Code', 'Consolas', 'Liberation Mono', monospace;
+  font-size: 0.9em;
+  color: var(--pixel-fg) !important;
 }
 
 .prose :where(code):not(:where([class~="not-prose"] *)) {
@@ -129,6 +139,10 @@
 .prose :where(pre):not(:where([class~="not-prose"] *)) {
   border: 3px solid var(--pixel-border);
   box-shadow: 4px 4px 0 var(--pixel-border);
+  overflow-x: auto;
+  white-space: pre;
+  background: var(--pixel-hover-bg) !important;
+  color: var(--pixel-fg) !important;
 }
 
 /* Home page install command: prominent, left-aligned */

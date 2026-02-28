@@ -88,6 +88,17 @@ const { title, sidebarItems, currentSection, contentClass = 'max-w-4xl' } = Astr
                   Blogs
                 </a>
               </li>
+              <li class="pt-2">
+                <span class="px-3 text-xs font-pixel text-[var(--pixel-muted)] uppercase">Dashboard</span>
+              </li>
+              <li>
+                <a
+                  href="/dashboard/risk"
+                  class="block px-3 py-2 font-pixel text-xs hover:bg-[var(--pixel-hover-bg)] border-2 border-transparent hover:border-[var(--pixel-border)]"
+                >
+                  Risk Dashboard
+                </a>
+              </li>
               {sidebarItems
                 .filter((i) => i.href.startsWith('/blogs/'))
                 .map((i) => (

@@ -1,0 +1,146 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+const docs = await getCollection('docs');
+const blogs = await getCollection('blogs');
+
+// Mock risk metrics for demo. In production, source from BigQuery decision logs via API.
+const today = new Date();
+const dates: string[] = [];
+for (let i = 6; i >= 0; i--) {
+  const d = new Date(today);
+  d.setDate(d.getDate() - i);
+  dates.push(d.toISOString().slice(0, 10));
+}
+const blockTypes = ['fraud', 'policy', 'manual'];
+const dailyBlockCountByType: { date: string; blockType: string; count: number }[] = [];
+for (const date of dates) {
+  for (const bt of blockTypes) {
+    dailyBlockCountByType.push({ date, blockType: bt, count: Math.floor(Math.random() * 50) + 10 });
+  }
+}
+const mockData = {
+  dailyBlockCountByType,
+  falsePositiveRate: 0.023,
+  providerErrorRate: 0.008,
+  whitelistHitRate: 0.156,
+};
+
+const sidebarItems = [
+  { href: '/dashboard/risk', label: 'Risk Dashboard', active: true },
+  ...docs.map((d) => {
+    const s = d.id.replace(/\.md$/, '');
+    return { href: `/docs/${s}`, label: d.data.title ?? s, active: false };
+  }),
+  ...blogs.map((b) => {
+    const s = b.id.replace(/\.md$/, '');
+    return { href: `/blogs/${s}`, label: b.data.title ?? s, active: false };
+  }),
+];
+---
+
+<Layout title="Risk Dashboard" sidebarItems={sidebarItems} currentSection="home" contentClass="max-w-6xl">
+  <div class="prose dark:prose-invert max-w-none" style="color: var(--pixel-fg);">
+    <h1 class="text-2xl font-pixel tracking-tight" style="color: var(--pixel-fg);">Risk Dashboard</h1>
+    <p class="mt-2" style="color: var(--pixel-muted);">
+      Risk control metrics sourced from BigQuery decision logs. Block rate, false positive rate, provider error rate, and whitelist hit rate.
+    </p>
+
+    <div id="risk-dashboard" class="mt-8 space-y-8">
+      <div id="loading" class="text-sm font-pixel-body" style="color: var(--pixel-muted);">
+        Loading metrics...
+      </div>
+      <div id="content" class="hidden">
+        <section class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 not-prose">
+          <div
+            class="metric-card p-4 border-2 border-[var(--pixel-border)] bg-[var(--pixel-bg)]"
+            style="box-shadow: 4px 4px 0 var(--pixel-border);"
+          >
+            <h3 class="font-pixel text-xs" style="color: var(--pixel-muted);">False Positive Rate</h3>
+            <p id="metric-fpr" class="mt-2 text-2xl font-pixel">--</p>
+          </div>
+          <div
+            class="metric-card p-4 border-2 border-[var(--pixel-border)] bg-[var(--pixel-bg)]"
+            style="box-shadow: 4px 4px 0 var(--pixel-border);"
+          >
+            <h3 class="font-pixel text-xs" style="color: var(--pixel-muted);">Provider Error Rate</h3>
+            <p id="metric-provider" class="mt-2 text-2xl font-pixel">--</p>
+          </div>
+          <div
+            class="metric-card p-4 border-2 border-[var(--pixel-border)] bg-[var(--pixel-bg)]"
+            style="box-shadow: 4px 4px 0 var(--pixel-border);"
+          >
+            <h3 class="font-pixel text-xs" style="color: var(--pixel-muted);">Whitelist Hit Rate</h3>
+            <p id="metric-whitelist" class="mt-2 text-2xl font-pixel">--</p>
+          </div>
+          <div
+            class="metric-card p-4 border-2 border-[var(--pixel-border)] bg-[var(--pixel-bg)]"
+            style="box-shadow: 4px 4px 0 var(--pixel-border);"
+          >
+            <h3 class="font-pixel text-xs" style="color: var(--pixel-muted);">Data Source</h3>
+            <p id="metric-source" class="mt-2 text-sm font-pixel-body">--</p>
+          </div>
+        </section>
+
+        <section class="mt-8 not-prose">
+          <h2 class="font-pixel text-lg mb-4" style="color: var(--pixel-fg);">Daily Block Count by Type</h2>
+          <div
+            class="overflow-x-auto border-2 border-[var(--pixel-border)]"
+            style="box-shadow: 4px 4px 0 var(--pixel-border);"
+          >
+            <table class="w-full text-left font-pixel-body text-sm">
+              <thead>
+                <tr class="border-b-2 border-[var(--pixel-border)] bg-[var(--pixel-hover-bg)]">
+                  <th class="px-4 py-3 font-pixel text-xs" style="color: var(--pixel-fg);">Date</th>
+                  <th class="px-4 py-3 font-pixel text-xs" style="color: var(--pixel-fg);">Block Type</th>
+                  <th class="px-4 py-3 font-pixel text-xs text-right" style="color: var(--pixel-fg);">Count</th>
+                </tr>
+              </thead>
+              <tbody id="block-table-body">
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+      <div id="error" class="hidden text-sm font-pixel-body" style="color: var(--pixel-muted);">
+        Failed to load metrics.
+      </div>
+    </div>
+  </div>
+
+  <script define:vars={{ mockData }}>
+    (function () {
+      const loading = document.getElementById('loading');
+      const content = document.getElementById('content');
+      const data = mockData;
+
+      loading?.classList.add('hidden');
+      content?.classList.remove('hidden');
+
+      const formatPct = (n) => (n * 100).toFixed(2) + '%';
+
+      const fprEl = document.getElementById('metric-fpr');
+      const providerEl = document.getElementById('metric-provider');
+      const whitelistEl = document.getElementById('metric-whitelist');
+      const sourceEl = document.getElementById('metric-source');
+
+      if (fprEl) fprEl.textContent = formatPct(data.falsePositiveRate);
+      if (providerEl) providerEl.textContent = formatPct(data.providerErrorRate);
+      if (whitelistEl) whitelistEl.textContent = formatPct(data.whitelistHitRate);
+      if (sourceEl) sourceEl.textContent = 'Demo (configure BQ for live data)';
+
+      const tbody = document.getElementById('block-table-body');
+      if (tbody && data.dailyBlockCountByType?.length) {
+        const rows = data.dailyBlockCountByType
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map(
+            (r) =>
+              `<tr class="border-b border-[var(--pixel-border)]"><td class="px-4 py-2">${r.date}</td><td class="px-4 py-2">${r.blockType}</td><td class="px-4 py-2 text-right">${r.count}</td></tr>`
+          )
+          .join('');
+        tbody.innerHTML = rows;
+      }
+    })();
+  </script>
+</Layout>

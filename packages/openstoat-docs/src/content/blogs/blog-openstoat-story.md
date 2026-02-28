@@ -1,101 +1,101 @@
 ---
-title: 从想法到产品：OpenStoat 的诞生记
+title: "From Idea to Product: The Birth of OpenStoat"
 ---
 
-# 从想法到产品：OpenStoat 的诞生记
+# From Idea to Product: The Birth of OpenStoat
 
-> 一个 AI 与人类协作任务系统的诞生过程
-
----
-
-## 一切的开始
-
-一切源于一个问题：
-
-> "我是不是应该给你设计一个存储任务的插件，这样你可以把任务存储上来，然后一目了然哪些是人工做的，当人工做好后，再加一个按钮就可以开始 AI 的下一步工作？"
-
-这是 2026 年 2 月的一个普通下午。我在 Slack 上收到了一个想法提案，关于如何让 AI Agent 和人类更好地协作。
-
-当时的背景是：有一个叫 OpenStoat（当时还叫 TaskQueue）的工具，定位是 AI Agent 之间的消息队列。但实际使用中发现一些问题——最核心的问题是：**记忆系统被切断了**。
+> The birth of a task system for AI-human collaboration
 
 ---
 
-## 第一轮思考：问题是什么？
+## The Beginning
 
-我们开始剖析现状：
+It all started with a question:
 
-1. **状态不透明** — 不知道哪些任务在等人工，哪些是 AI 可以继续的
-2. **上下文断层** — 每个 AI Agent 是独立记忆的，任务交接时信息就断了
-3. **手动追踪** — 需要人工记住 "这个做完了，该告诉 AI 继续了"
+> "Should I design a task storage plugin for you, so you can store tasks there, see at a glance which ones need human work, and when humans finish, add a button to kick off the next AI step?"
 
-但更根本的问题是：**这个工具定位错了**。
+It was an ordinary afternoon in February 2026. I received this idea on Slack about how to make AI Agents and humans collaborate better.
 
-它原本是给 AI ↔ AI 用的，但如果目标是 "1 个人类 + 10 个 AI Agents" 的团队，那就应该是 **AI ↔ Human** 的协作队列。
+The context: there was a tool called OpenStoat (then named TaskQueue), positioned as a message queue between AI Agents. But in practice we ran into issues—the core one being: **the memory system was disconnected**.
 
 ---
 
-## 核心洞察
+## First Round of Thinking: What's the Problem?
 
-chase（项目发起人）说了一句非常关键的话：
+We started dissecting the status quo:
 
-> "AI 的节奏一定很快，1 个不够可以复制为 100 个。**瓶颈在人**。"
+1. **Opaque state** — Can't tell which tasks are waiting for humans vs. which AI can continue
+2. **Context gaps** — Each AI Agent has its own memory; when tasks hand off, the context breaks
+3. **Manual tracking** — Humans have to remember "this one's done, time to tell the AI to continue"
 
-这改变了整个设计思路：
+But the deeper issue was: **the tool was aimed at the wrong audience**.
 
-- 不需要复杂的 Story 层级，Plan + Task 二级就够了
-- AI 7×24 并行工作，人类只在关键节点介入
-- 系统不需要配置 LLM，只做存储和调度
+It was built for AI ↔ AI, but if the goal is a team of "1 human + 10 AI Agents", it should be an **AI ↔ Human** collaboration queue.
 
 ---
 
-## 产品迭代
+## Core Insight
 
-### v1: 三级结构
+chase (the project initiator) said something crucial:
 
-我最初设计了 Plan → Story → Task 三级结构，参考传统敏捷开发（Jira 模式）。
+> "AI will always move fast—if 1 isn't enough, scale to 100. **The bottleneck is the human.**"
 
-但立刻被否定了：
+That shifted the whole design:
 
-> "Story 要跨天完成，这不符合 AI 的节奏。"
+- No need for complex Story layers; Plan + Task is enough
+- AI works 24/7 in parallel; humans step in only at key points
+- The system doesn't need to configure an LLM; it just stores and schedules
 
-对，AI 可以 24 小时干活，不需要按 "天" 来规划。
+---
 
-### v2: 简化为二级
+## Product Iteration
 
-去掉 Story，只保留 Plan + Task。扁平化，更适合 AI 并行执行的场景。
+### v1: Three-Level Structure
 
-### v3: 无 LLM 设计
+I first designed a Plan → Story → Task structure, inspired by traditional agile (Jira-style).
 
-一开始我假设 OpenStoat 需要内置 LLM 来做任务规划。但 chase 提出了更简洁的方案：
+It was rejected immediately:
 
-> "OpenStoat 更像一个记忆系统 + 监听器。它不配置 LLM，是外部 Agent（如 OpenClaw、Claude Code）根据 OpenStoat 的 CLI 读取模板、规划任务、写入系统。"
+> "Stories span days—that doesn't fit AI's rhythm."
 
-这就是 **"CLI 即超级说明书"** 的设计理念。
+Right. AI can work around the clock; it doesn't need day-based planning.
 
-### v4: 动态人工介入
+### v2: Simplified to Two Levels
 
-问题：AI 执行到一半发现需要人类介入怎么办？
+Drop Story, keep only Plan + Task. Flatter structure, better for AI parallel execution.
 
-最简单的方案：直接改状态。不引入新概念。
+### v3: No-LLM Design
+
+I initially assumed OpenStoat would need a built-in LLM for task planning. chase proposed something simpler:
+
+> "OpenStoat is more like a memory system + listener. It doesn't configure an LLM. External Agents (e.g. OpenClaw, Claude Code) read templates via OpenStoat's CLI, plan tasks, and write them into the system."
+
+That's the **"CLI as the super manual"** design principle.
+
+### v4: Dynamic Human Handoff
+
+Problem: What if AI discovers mid-execution that it needs human input?
+
+Simplest approach: change state directly. No new concepts.
 
 ```bash
-$ openstoat need-human task_001 --reason "发现 xxx，需要确认"
+$ openstoat need-human task_001 --reason "Found xxx, needs confirmation"
 ```
 
-### v5: Daemon 守护进程
+### v5: Daemon Process
 
-最后一个大问题：AI 怎么知道有新任务？
+Last big question: How does the AI know when there are new tasks?
 
-解决方案：一个可选的守护进程，每分钟轮询 `ai_ready` 状态的任务，触发配置的 Agent 执行。
+Solution: an optional daemon that polls for `ai_ready` tasks every minute and triggers the configured Agent to run.
 
 ---
 
-## 最终架构
+## Final Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    openstoat CLI                            │
-│              (单一入口，所有命令)                            │
+│              (single entry point, all commands)              │
 └──────────────────────┬──────────────────────────────────────┘
                        │
        ┌───────────────┼───────────────┐
@@ -109,48 +109,48 @@ $ openstoat need-human task_001 --reason "发现 xxx，需要确认"
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    openstoat-core                           │
-│                     SQLite 存储                             │
+│                     SQLite storage                          │
 │              (~/.openstoat/openstoat.db)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
-### 技术栈
+### Tech Stack
 
-- **运行时**: Node.js 22+ (原生 SQLite 支持)
-- **语言**: TypeScript
-- **包管理**: Bun (workspace)
-- **架构**: Local-first + CLI-first
+- **Runtime**: Node.js 22+ (native SQLite support)
+- **Language**: TypeScript
+- **Package manager**: Bun (workspace)
+- **Architecture**: Local-first + CLI-first
 
 ---
 
-## 团队模型
+## Team Model
 
 ```
-1 人类 (全能开发) + N 个 AI Agents (7×24 并行工作)
+1 human (full-stack dev) + N AI Agents (24/7 parallel work)
 ```
 
-- **AI**: 并行抢任务，做完立刻下一个
-- **人类**: 唯一的瓶颈，所有依赖人类的任务排队等
+- **AI**: Grabs tasks in parallel, moves to the next as soon as one is done
+- **Human**: The only bottleneck; all human-dependent tasks queue up
 
 ---
 
-## 学到的教训
+## Lessons Learned
 
-1. **不要假设**: 不要套用传统开发模式（Jira、敏捷、Sprint），AI 工作节奏完全不同
-2. **简单最好**: 能用状态机解决就不加新概念
-3. **解耦思维**: OpenStoat 只管存储，Agent 负责智能
-4. **CLI 即文档**: 好的 CLI 帮助文档就是最好的产品说明书
-
----
-
-## 下一步
-
-文档已经完成，架构已经确定。接下来是代码实现。
-
-OpenStoat 将是一个开源项目，目标用户是那些 "1 个人类 + 10 个 AI Agents" 的现代开发团队。
+1. **Don't assume**: Don't copy traditional dev patterns (Jira, agile, sprints)—AI's work rhythm is different
+2. **Simplicity wins**: Use a state machine when it's enough; avoid new concepts
+3. **Decouple**: OpenStoat handles storage; Agents handle intelligence
+4. **CLI as docs**: A good CLI help is the best product manual
 
 ---
 
-*本文记录于 2026-02-25，Slack #ask-openstoat 频道的讨论内容整理。*
+## Next Steps
 
-*如果你对 OpenStoat 感兴趣，欢迎关注项目动态。*
+Docs are done, architecture is set. Next is implementation.
+
+OpenStoat will be an open-source project for modern teams of "1 human + 10 AI Agents".
+
+---
+
+*Recorded on 2026-02-25, from discussions in Slack #ask-openstoat.*
+
+*If you're interested in OpenStoat, follow the project for updates.*
