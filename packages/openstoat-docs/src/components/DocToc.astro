@@ -17,19 +17,19 @@ const filtered = headings.filter((h) => h.depth >= 2 && h.depth <= 3);
     aria-label="On this page"
   >
     <nav class="sticky top-24">
-      <h2 class="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-3">
+      <h2 class="text-xs font-semibold text-[#404040] uppercase tracking-wider mb-3">
         On this page
       </h2>
-      <ul class="space-y-2 border-l border-slate-200 dark:border-slate-700">
+      <ul class="space-y-2 border-l-2 border-black">
         {filtered.map((h) => (
           <li
             class={`text-sm ${
               h.depth === 3 ? 'pl-4' : 'pl-3'
-            } -ml-px border-l-2 border-transparent hover:border-slate-300 dark:hover:border-slate-600`}
+            } -ml-px border-l-2 border-transparent hover:border-black`}
           >
             <a
               href={`#${h.slug}`}
-              class="block py-0.5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+              class="block py-0.5 text-[#404040] hover:text-black transition-colors"
             >
               {h.text}
             </a>

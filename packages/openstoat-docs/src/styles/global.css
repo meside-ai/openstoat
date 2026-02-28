@@ -2,13 +2,23 @@
 @plugin "@tailwindcss/typography";
 
 @theme {
-  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-sans: 'Pixelify Sans', 'Press Start 2P', monospace;
 }
 
-/* GitBook-style admonition/callout blocks (remark-admonition output) */
+/* Pixel art aesthetic: black and white color scheme */
+:root {
+  --pixel-bg: #ffffff;
+  --pixel-fg: #000000;
+  --pixel-border: #000000;
+  --pixel-muted: #404040;
+  --pixel-subtle: #e5e5e5;
+}
+
+/* GitBook-style admonition/callout blocks - pixel style, black/white */
 [data-admonition-name],
 [data-admonish] {
-  @apply my-6 rounded-lg border px-4 py-3;
+  @apply my-6 border-2 border-black px-4 py-3;
+  background-color: var(--pixel-subtle);
 }
 
 [data-admonish] > :first-child {
@@ -19,40 +29,35 @@
   @apply mb-0;
 }
 
-[data-admonition-name="note"],
-[data-admonition-name="info"] {
-  @apply border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950/40;
-}
-
 [data-admonition-name="note"]::before,
-[data-admonition-name="info"]::before {
-  content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2;
-}
-
-[data-admonition-name="tip"] {
-  @apply border-emerald-200 bg-emerald-50 dark:border-emerald-800 dark:bg-emerald-950/40;
-}
-
-[data-admonition-name="tip"]::before {
-  content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-emerald-800 dark:text-emerald-200 mb-2;
-}
-
-[data-admonition-name="warning"] {
-  @apply border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40;
-}
-
-[data-admonition-name="warning"]::before {
-  content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-amber-800 dark:text-amber-200 mb-2;
-}
-
-[data-admonition-name="danger"] {
-  @apply border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950/40;
-}
-
+[data-admonition-name="info"]::before,
+[data-admonition-name="tip"]::before,
+[data-admonition-name="warning"]::before,
 [data-admonition-name="danger"]::before {
   content: attr(data-admonition-label);
-  @apply block text-sm font-semibold text-red-800 dark:text-red-200 mb-2;
+  @apply block text-sm font-semibold text-black mb-2;
+}
+
+/* Prose overrides for pixel typography */
+.prose {
+  --tw-prose-body: #000000;
+  --tw-prose-headings: #000000;
+  --tw-prose-links: #000000;
+  --tw-prose-code: #000000;
+  --tw-prose-pre-bg: #e5e5e5;
+  --tw-prose-pre-border: #000000;
+}
+
+.prose a {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose pre,
+.prose code {
+  border: 2px solid black;
+}
+
+.prose pre {
+  background-color: var(--pixel-subtle);
 }
